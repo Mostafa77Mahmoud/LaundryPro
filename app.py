@@ -6,7 +6,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
-import config
 
 class Base(DeclarativeBase):
     pass
@@ -15,24 +14,24 @@ db = SQLAlchemy(model_class=Base)
 
 # create the app
 app = Flask(__name__)
-app.secret_key = config.SESSION_SECRET
+app.secret_key = os.environ.get("SESSION_SECRET")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1) # needed for url_for to generate with https
 
 # Enable CORS for mobile app
 CORS(app)
 
 # configure the database, relative to the app instance folder
-app.config["SQLALCHEMY_DATABASE_URI"] = config.DATABASE_URL
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
 }
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["UPLOAD_FOLDER"] = config.UPLOAD_FOLDER
-app.config["MAX_CONTENT_LENGTH"] = config.MAX_CONTENT_LENGTH
+app.config["UPLOAD_FOLDER"] = "static/uploads"
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16MB max file size
 
 # Ensure upload directory exists
-os.makedirs(config.UPLOAD_FOLDER, exist_ok=True)
+os.makedirs("static/uploads", exist_ok=True)
 
 def admin_required(f):
     """Decorator to protect admin routes"""
@@ -47,7 +46,8 @@ def admin_required(f):
 def login():
     if request.method == 'POST':
         password = request.form.get('password')
-        if password == config.ADMIN_SECRET:
+        admin_secret = os.environ.get("ADMIN_SECRET", "sasa_ot123")
+        if password == admin_secret:
             session['admin_authenticated'] = True
             return redirect(url_for('dashboard'))
         else:
