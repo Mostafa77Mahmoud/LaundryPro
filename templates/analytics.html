@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - Laundry Service{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h2 mb-3">
+            <i class="fas fa-chart-bar me-2"></i>
+            Advanced Analytics
+        </h1>
+    </div>
+</div>
+
+<!-- Date Filter Controls -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Date Range Filter</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="startDate" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="startDate">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="endDate" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="endDate">
+                    </div>
+                </div>
+                <button class="btn btn-primary mt-3" onclick="updateCharts()">Update Charts</button>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Quick Filters</h5>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary" onclick="setDateRange(7)">Last 7 Days</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="setDateRange(30)">Last 30 Days</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="setDateRange(90)">Last 3 Months</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Revenue Trends Chart -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Revenue Trends</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" width="400" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Service Analytics -->
+<div class="row mb-4">
+    <div class="col-xl-8 col-lg-7">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Service Popularity</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="servicePopularityChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-lg-5">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Top Services</h6>
+            </div>
+            <div class="card-body">
+                <div id="topServicesList">
+                    <!-- Top services will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Analytics -->
+<div class="row mb-4">
+    <div class="col-xl-6 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Commission vs Shop Revenue</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="commissionChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-6 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Payment Method Revenue</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="paymentRevenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Key Performance Indicators -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Key Performance Indicators</h6>
+            </div>
+            <div class="card-body">
+                <div class="row" id="kpiCards">
+                    <!-- KPI cards will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+{% endblock %}

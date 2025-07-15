@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+
+{% block title %}Orders - Laundry Service{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h2 mb-3">
+            <i class="fas fa-list-alt me-2"></i>
+            Order Management
+        </h1>
+    </div>
+</div>
+
+<!-- Filter Controls -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label for="statusFilter" class="form-label">Filter by Status</label>
+                        <select class="form-select" id="statusFilter" onchange="filterOrders()">
+                            <option value="">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="washing">Washing</option>
+                            <option value="ready">Ready</option>
+                            <option value="delivered">Delivered</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="paymentFilter" class="form-label">Filter by Payment</label>
+                        <select class="form-select" id="paymentFilter" onchange="filterOrders()">
+                            <option value="">All Payment Methods</option>
+                            <option value="cash">Cash</option>
+                            <option value="card">Card</option>
+                            <option value="mobile_payment">Mobile Payment</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="searchOrder" class="form-label">Search Orders</label>
+                        <input type="text" class="form-control" id="searchOrder" placeholder="Order ID or Customer" onkeyup="filterOrders()">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="dateFilter" class="form-label">Filter by Date</label>
+                        <input type="date" class="form-control" id="dateFilter" onchange="filterOrders()">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Orders Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">All Orders</h6>
+                <div>
+                    <span class="badge bg-info me-2" id="totalOrdersCount">{{ orders|length }} Orders</span>
+                    <button class="btn btn-sm btn-primary" onclick="refreshOrders()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" id="ordersTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Phone</th>
+                                <th>Items</th>
+                                <th>Total</th>
+                                <th>Commission</th>
+                                <th>Shop Amount</th>
+                                <th>Payment</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            {% for order in orders %}
+                            <tr data-order-id="{{ order.id }}" data-status="{{ order.status }}" data-payment="{{ order.payment_method }}" data-date="{{ order.created_at.strftime('%Y-%m-%d') }}">
+                                <td>
+                                    <span class="badge bg-secondary">{{ order.id[:8] }}</span>
+                                </td>
+                                <td>{{ order.user_info.name }}</td>
+                                <td>{{ order.user_info.phone }}</td>
+                                <td>
+                                    <small>
+                                        {% for item in order.items %}
+                                        {{ item.item_name }} ({{ item.quantity }})<br>
+                                        {% endfor %}
+                                    </small>
+                                </td>
+                                <td>
+                                    <strong>{{ "%.2f"|format(order.total_amount) }} SAR</strong>
+                                </td>
+                                <td>
+                                    <span class="text-danger">{{ "%.2f"|format(order.commission_amount) }} SAR</span>
+                                </td>
+                                <td>
+                                    <span class="text-success">{{ "%.2f"|format(order.shop_amount) }} SAR</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ order.payment_method.replace('_', ' ').title() }}</span>
+                                </td>
+                                <td>
+                                    <select class="form-select form-select-sm status-select" 
+                                            data-order-id="{{ order.id }}" 
+                                            onchange="updateOrderStatus(this)">
+                                        <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>Pending</option>
+                                        <option value="washing" {% if order.status == 'washing' %}selected{% endif %}>Washing</option>
+                                        <option value="ready" {% if order.status == 'ready' %}selected{% endif %}>Ready</option>
+                                        <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <small>{{ order.created_at.strftime('%m/%d %H:%M') }}</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-info" onclick="viewOrderDetails('{{ order.id }}')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-outline-primary" onclick="printOrder('{{ order.id }}')">
+                                            <i class="fas fa-print"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="11" class="text-center text-muted">No orders found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="orderDetailsContent">
+                <!-- Order details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="printOrderFromModal()">Print Order</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Update order status
+async function updateOrderStatus(selectElement) {
+    const orderId = selectElement.dataset.orderId;
+    const newStatus = selectElement.value;
+    
+    try {
+        const response = await fetch(`/api/orders/${orderId}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+        
+        if (response.ok) {
+            // Update the row's data attribute
+            const row = selectElement.closest('tr');
+            row.dataset.status = newStatus;
+            
+            // Show success feedback
+            showToast('Order status updated successfully', 'success');
+        } else {
+            throw new Error('Failed to update status');
+        }
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        showToast('Failed to update order status', 'error');
+        
+        // Revert the select value
+        location.reload();
+    }
+}
+
+// Filter orders
+function filterOrders() {
+    const statusFilter = document.getElementById('statusFilter').value;
+    const paymentFilter = document.getElementById('paymentFilter').value;
+    const searchTerm = document.getElementById('searchOrder').value.toLowerCase();
+    const dateFilter = document.getElementById('dateFilter').value;
+    
+    const rows = document.querySelectorAll('#ordersTableBody tr[data-order-id]');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        let show = true;
+        
+        // Status filter
+        if (statusFilter && row.dataset.status !== statusFilter) {
+            show = false;
+        }
+        
+        // Payment filter
+        if (paymentFilter && row.dataset.payment !== paymentFilter) {
+            show = false;
+        }
+        
+        // Date filter
+        if (dateFilter && row.dataset.date !== dateFilter) {
+            show = false;
+        }
+        
+        // Search filter
+        if (searchTerm) {
+            const text = row.textContent.toLowerCase();
+            if (!text.includes(searchTerm)) {
+                show = false;
+            }
+        }
+        
+        row.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+    });
+    
+    // Update counter
+    document.getElementById('totalOrdersCount').textContent = `${visibleCount} Orders`;
+}
+
+// View order details
+function viewOrderDetails(orderId) {
+    // This would fetch detailed order information
+    const modalContent = document.getElementById('orderDetailsContent');
+    modalContent.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading order details...</p>
+        </div>
+    `;
+    
+    const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+    modal.show();
+    
+    // Simulate loading order details
+    setTimeout(() => {
+        modalContent.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Order Information</h6>
+                    <p><strong>Order ID:</strong> ${orderId}</p>
+                    <p><strong>Status:</strong> <span class="badge bg-info">Processing</span></p>
+                    <p><strong>Created:</strong> ${new Date().toLocaleString()}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6>Customer Information</h6>
+                    <p><strong>Name:</strong> Customer Name</p>
+                    <p><strong>Phone:</strong> +966 XXX XXX XXX</p>
+                    <p><strong>Location:</strong> Riyadh, Saudi Arabia</p>
+                </div>
+            </div>
+            <hr>
+            <h6>Order Items</h6>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Example Item</td>
+                            <td>1</td>
+                            <td>50.00 SAR</td>
+                            <td>50.00 SAR</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }, 1000);
+}
+
+// Print order
+function printOrder(orderId) {
+    // This would generate a printable order receipt
+    window.print();
+}
+
+// Print order from modal
+function printOrderFromModal() {
+    // This would print the order details shown in the modal
+    window.print();
+}
+
+// Refresh orders
+function refreshOrders() {
+    location.reload();
+}
+
+// Show toast notification
+function showToast(message, type = 'info') {
+    // Create a simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999;';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}

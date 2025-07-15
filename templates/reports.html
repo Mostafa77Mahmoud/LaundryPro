@@ -1,0 +1,480 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Laundry Service{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h2 mb-3">
+            <i class="fas fa-file-export me-2"></i>
+            Reports & Export
+        </h1>
+    </div>
+</div>
+
+<!-- Report Generation Controls -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Generate Report</h5>
+            </div>
+            <div class="card-body">
+                <form id="reportForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="reportType" class="form-label">Report Type</label>
+                            <select class="form-select" id="reportType" required>
+                                <option value="">Select Report Type</option>
+                                <option value="financial">Financial Summary</option>
+                                <option value="orders">Orders Report</option>
+                                <option value="commission">Commission Report</option>
+                                <option value="services">Service Performance</option>
+                                <option value="customers">Customer Report</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="reportFormat" class="form-label">Format</label>
+                            <select class="form-select" id="reportFormat" required>
+                                <option value="csv">CSV</option>
+                                <option value="pdf">PDF</option>
+                                <option value="excel">Excel</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label for="startDate" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="startDate" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="endDate" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="endDate" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-download me-1"></i>
+                            Generate Report
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary ms-2" onclick="setQuickDateRange('today')">Today</button>
+                        <button type="button" class="btn btn-outline-secondary ms-1" onclick="setQuickDateRange('week')">This Week</button>
+                        <button type="button" class="btn btn-outline-secondary ms-1" onclick="setQuickDateRange('month')">This Month</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Export</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" onclick="quickExport('orders')">
+                        <i class="fas fa-list-alt me-1"></i>
+                        Export All Orders
+                    </button>
+                    <button class="btn btn-outline-success" onclick="quickExport('financial')">
+                        <i class="fas fa-money-bill me-1"></i>
+                        Financial Summary
+                    </button>
+                    <button class="btn btn-outline-info" onclick="quickExport('customers')">
+                        <i class="fas fa-users me-1"></i>
+                        Customer List
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="quickExport('services')">
+                        <i class="fas fa-tags me-1"></i>
+                        Service Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report History -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Reports</h5>
+                <button class="btn btn-sm btn-outline-danger" onclick="clearReportHistory()">
+                    <i class="fas fa-trash me-1"></i>
+                    Clear History
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Report Type</th>
+                                <th>Date Range</th>
+                                <th>Format</th>
+                                <th>Generated</th>
+                                <th>Size</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportHistoryBody">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No reports generated yet</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Overview -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Revenue Breakdown</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueBreakdownChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Commission Tracking</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Total Revenue:</span>
+                        <strong id="totalRevenue">0.00 SAR</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>App Commission (15%):</span>
+                        <strong class="text-danger" id="totalCommission">0.00 SAR</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Shop Revenue:</span>
+                        <strong class="text-success" id="shopRevenue">0.00 SAR</strong>
+                    </div>
+                </div>
+                <hr>
+                <h6>Monthly Commission Trend</h6>
+                <canvas id="commissionTrendChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 mb-0">Generating report...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Set quick date ranges
+function setQuickDateRange(period) {
+    const today = new Date();
+    const startDate = document.getElementById('startDate');
+    const endDate = document.getElementById('endDate');
+    
+    endDate.value = today.toISOString().split('T')[0];
+    
+    switch (period) {
+        case 'today':
+            startDate.value = today.toISOString().split('T')[0];
+            break;
+        case 'week':
+            const weekAgo = new Date(today);
+            weekAgo.setDate(today.getDate() - 7);
+            startDate.value = weekAgo.toISOString().split('T')[0];
+            break;
+        case 'month':
+            const monthAgo = new Date(today);
+            monthAgo.setMonth(today.getMonth() - 1);
+            startDate.value = monthAgo.toISOString().split('T')[0];
+            break;
+    }
+}
+
+// Handle report form submission
+document.getElementById('reportForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const reportData = {
+        type: formData.get('reportType'),
+        format: formData.get('reportFormat'),
+        startDate: formData.get('startDate'),
+        endDate: formData.get('endDate')
+    };
+    
+    // Show loading modal
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    loadingModal.show();
+    
+    try {
+        // Generate report
+        await generateReport(reportData);
+        loadingModal.hide();
+        
+        // Add to history
+        addToReportHistory(reportData);
+        
+    } catch (error) {
+        console.error('Error generating report:', error);
+        loadingModal.hide();
+        alert('Failed to generate report. Please try again.');
+    }
+});
+
+// Generate report
+async function generateReport(reportData) {
+    // Simulate report generation
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Create and download a sample CSV file
+    if (reportData.format === 'csv') {
+        const csvContent = generateSampleCSV(reportData.type);
+        downloadFile(csvContent, `${reportData.type}_report.csv`, 'text/csv');
+    } else if (reportData.format === 'pdf') {
+        // For PDF, we would use a library like jsPDF or send to backend
+        alert('PDF generation would be implemented with a PDF library');
+    } else if (reportData.format === 'excel') {
+        // For Excel, we would use a library like SheetJS
+        alert('Excel generation would be implemented with SheetJS library');
+    }
+}
+
+// Generate sample CSV content
+function generateSampleCSV(type) {
+    const headers = {
+        'financial': 'Date,Total Revenue,Commission,Shop Revenue,Orders Count',
+        'orders': 'Order ID,Customer,Phone,Total Amount,Status,Payment Method,Created Date',
+        'commission': 'Date,Order Count,Total Revenue,Commission Amount,Commission Rate',
+        'services': 'Service Name,Orders Count,Total Revenue,Average Price',
+        'customers': 'Customer Name,Phone,Orders Count,Total Spent,Last Order'
+    };
+    
+    const sampleData = {
+        'financial': [
+            '2024-01-15,1500.00,225.00,1275.00,15',
+            '2024-01-14,2200.00,330.00,1870.00,22',
+            '2024-01-13,1800.00,270.00,1530.00,18'
+        ],
+        'orders': [
+            'ORD001,John Doe,+966501234567,150.00,delivered,cash,2024-01-15 10:30',
+            'ORD002,Jane Smith,+966507654321,200.00,ready,card,2024-01-15 11:45',
+            'ORD003,Ahmed Ali,+966512345678,100.00,washing,mobile_payment,2024-01-15 14:20'
+        ],
+        'commission': [
+            '2024-01-15,15,1500.00,225.00,15%',
+            '2024-01-14,22,2200.00,330.00,15%',
+            '2024-01-13,18,1800.00,270.00,15%'
+        ],
+        'services': [
+            'Large Carpet,45,4500.00,100.00',
+            'Dress Cleaning,32,800.00,25.00',
+            '2-Seater Sofa,28,2240.00,80.00'
+        ],
+        'customers': [
+            'John Doe,+966501234567,5,750.00,2024-01-15',
+            'Jane Smith,+966507654321,3,450.00,2024-01-14',
+            'Ahmed Ali,+966512345678,8,1200.00,2024-01-13'
+        ]
+    };
+    
+    return headers[type] + '\n' + sampleData[type].join('\n');
+}
+
+// Download file
+function downloadFile(content, filename, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+// Quick export functions
+async function quickExport(type) {
+    const today = new Date().toISOString().split('T')[0];
+    
+    const reportData = {
+        type: type,
+        format: 'csv',
+        startDate: today,
+        endDate: today
+    };
+    
+    try {
+        await generateReport(reportData);
+        addToReportHistory(reportData);
+    } catch (error) {
+        console.error('Error in quick export:', error);
+        alert('Failed to export data. Please try again.');
+    }
+}
+
+// Add to report history
+function addToReportHistory(reportData) {
+    const tbody = document.getElementById('reportHistoryBody');
+    
+    // Remove "no reports" message if present
+    if (tbody.children.length === 1 && tbody.children[0].cells.length === 1) {
+        tbody.innerHTML = '';
+    }
+    
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>${reportData.type.charAt(0).toUpperCase() + reportData.type.slice(1)} Report</td>
+        <td>${reportData.startDate} to ${reportData.endDate}</td>
+        <td>${reportData.format.toUpperCase()}</td>
+        <td>${new Date().toLocaleString()}</td>
+        <td>~2.5 KB</td>
+        <td>
+            <button class="btn btn-sm btn-outline-primary" onclick="redownloadReport(this)">
+                <i class="fas fa-download"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger ms-1" onclick="removeReportFromHistory(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    
+    tbody.insertBefore(row, tbody.firstChild);
+}
+
+// Remove report from history
+function removeReportFromHistory(button) {
+    if (confirm('Remove this report from history?')) {
+        button.closest('tr').remove();
+        
+        // Check if table is empty
+        const tbody = document.getElementById('reportHistoryBody');
+        if (tbody.children.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No reports generated yet</td></tr>';
+        }
+    }
+}
+
+// Clear all report history
+function clearReportHistory() {
+    if (confirm('Clear all report history?')) {
+        const tbody = document.getElementById('reportHistoryBody');
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No reports generated yet</td></tr>';
+    }
+}
+
+// Redownload report
+function redownloadReport(button) {
+    // This would re-generate and download the report
+    alert('Redownloading report...');
+}
+
+// Load financial summary
+async function loadFinancialSummary() {
+    try {
+        const response = await fetch('/api/analytics/summary');
+        const data = await response.json();
+        
+        document.getElementById('totalRevenue').textContent = `${data.total_revenue.toFixed(2)} SAR`;
+        document.getElementById('totalCommission').textContent = `${data.total_commission.toFixed(2)} SAR`;
+        document.getElementById('shopRevenue').textContent = `${data.shop_revenue.toFixed(2)} SAR`;
+        
+    } catch (error) {
+        console.error('Error loading financial summary:', error);
+    }
+}
+
+// Initialize charts
+function initializeCharts() {
+    // Revenue Breakdown Chart
+    const revenueCtx = document.getElementById('revenueBreakdownChart').getContext('2d');
+    new Chart(revenueCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Shop Revenue', 'App Commission'],
+            datasets: [{
+                data: [85, 15],
+                backgroundColor: ['#28a745', '#dc3545'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    
+    // Commission Trend Chart
+    const commissionCtx = document.getElementById('commissionTrendChart').getContext('2d');
+    new Chart(commissionCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Commission',
+                data: [1200, 1500, 1800, 2200, 1900, 2500],
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                borderWidth: 2,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value + ' SAR';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default date range to this month
+    setQuickDateRange('month');
+    
+    // Load financial summary
+    loadFinancialSummary();
+    
+    // Initialize charts
+    initializeCharts();
+});
+</script>
+{% endblock %}

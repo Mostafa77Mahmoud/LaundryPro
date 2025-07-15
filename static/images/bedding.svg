@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="blanketGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4682B4;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#5F9EA0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#708090;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="pillowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F0F8FF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E6E6FA;stop-opacity:1" />
+    </linearGradient>
+    <pattern id="blanketPattern" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#4682B4"/>
+      <rect x="0" y="0" width="4" height="4" fill="#5F9EA0"/>
+      <rect x="4" y="4" width="4" height="4" fill="#5F9EA0"/>
+    </pattern>
+  </defs>
+  
+  <!-- Main blanket -->
+  <g transform="translate(10, 15)">
+    <!-- Blanket base -->
+    <rect x="0" y="10" width="70" height="55" fill="url(#blanketGradient)" stroke="#2F4F4F" stroke-width="1" rx="3"/>
+    
+    <!-- Blanket pattern overlay -->
+    <rect x="2" y="12" width="66" height="51" fill="url(#blanketPattern)" opacity="0.3" rx="2"/>
+    
+    <!-- Blanket stitching -->
+    <rect x="0" y="10" width="70" height="55" fill="none" stroke="#2F4F4F" stroke-width="1" stroke-dasharray="2,2" rx="3"/>
+    
+    <!-- Folded corner -->
+    <path d="M 55 10 L 70 10 L 70 25 Z" fill="#6495ED" stroke="#2F4F4F" stroke-width="1"/>
+    <path d="M 55 10 L 65 15 L 65 25 L 70 25" fill="none" stroke="#2F4F4F" stroke-width="0.5"/>
+  </g>
+  
+  <!-- Pillow -->
+  <g transform="translate(25, 5)">
+    <!-- Pillow body -->
+    <ellipse cx="25" cy="8" rx="22" ry="6" fill="url(#pillowGradient)" stroke="#D3D3D3" stroke-width="1"/>
+    
+    <!-- Pillow seam -->
+    <ellipse cx="25" cy="8" rx="20" ry="4" fill="none" stroke="#C0C0C0" stroke-width="0.5" stroke-dasharray="1,1"/>
+    
+    <!-- Pillow texture -->
+    <ellipse cx="25" cy="8" rx="18" ry="3" fill="#FFFFFF" opacity="0.3"/>
+  </g>
+  
+  <!-- Comforter (layered behind) -->
+  <g transform="translate(5, 25)" opacity="0.7">
+    <!-- Comforter base -->
+    <rect x="0" y="0" width="80" height="60" fill="#87CEEB" stroke="#4682B4" stroke-width="1" rx="4"/>
+    
+    <!-- Quilted pattern -->
+    <g stroke="#6495ED" stroke-width="0.5" fill="none">
+      <line x1="20" y1="0" x2="20" y2="60"/>
+      <line x1="40" y1="0" x2="40" y2="60"/>
+      <line x1="60" y1="0" x2="60" y2="60"/>
+      <line x1="0" y1="15" x2="80" y2="15"/>
+      <line x1="0" y1="30" x2="80" y2="30"/>
+      <line x1="0" y1="45" x2="80" y2="45"/>
+    </g>
+    
+    <!-- Quilted dots -->
+    <g fill="#4682B4" opacity="0.6">
+      <circle cx="10" cy="7.5" r="0.8"/>
+      <circle cx="30" cy="7.5" r="0.8"/>
+      <circle cx="50" cy="7.5" r="0.8"/>
+      <circle cx="70" cy="7.5" r="0.8"/>
+      <circle cx="10" cy="22.5" r="0.8"/>
+      <circle cx="30" cy="22.5" r="0.8"/>
+      <circle cx="50" cy="22.5" r="0.8"/>
+      <circle cx="70" cy="22.5" r="0.8"/>
+      <circle cx="10" cy="37.5" r="0.8"/>
+      <circle cx="30" cy="37.5" r="0.8"/>
+      <circle cx="50" cy="37.5" r="0.8"/>
+      <circle cx="70" cy="37.5" r="0.8"/>
+      <circle cx="10" cy="52.5" r="0.8"/>
+      <circle cx="30" cy="52.5" r="0.8"/>
+      <circle cx="50" cy="52.5" r="0.8"/>
+      <circle cx="70" cy="52.5" r="0.8"/>
+    </g>
+  </g>
+  
+  <!-- Care label -->
+  <g transform="translate(85, 20)">
+    <rect x="0" y="0" width="12" height="8" fill="#FFFFFF" stroke="#808080" stroke-width="0.5" rx="1"/>
+    <text x="6" y="3" text-anchor="middle" font-family="Arial" font-size="2" fill="#808080">CARE</text>
+    <text x="6" y="6" text-anchor="middle" font-family="Arial" font-size="1.5" fill="#808080">30°C</text>
+  </g>
+  
+  <!-- Washing symbols -->
+  <g transform="translate(5, 88)" opacity="0.6">
+    <!-- Machine wash cold -->
+    <rect x="0" y="0" width="8" height="6" fill="none" stroke="#4169E1" stroke-width="0.5" rx="1"/>
+    <text x="4" y="4" text-anchor="middle" font-family="Arial" font-size="3" fill="#4169E1">30</text>
+    
+    <!-- Tumble dry low -->
+    <circle cx="15" cy="3" r="3" fill="none" stroke="#FF8C00" stroke-width="0.5"/>
+    <circle cx="15" cy="3" r="1" fill="#FF8C00"/>
+    
+    <!-- Do not bleach -->
+    <g stroke="#DC143C" stroke-width="0.5">
+      <polygon points="22,0 28,0 25,5" fill="none"/>
+      <line x1="22" y1="0" x2="28" y2="5"/>
+      <line x1="28" y1="0" x2="22" y2="5"/>
+    </g>
+  </g>
+  
+  <!-- Cleaning effect sparkles -->
+  <g fill="#87CEEB" opacity="0.8">
+    <circle cx="15" cy="30" r="1">
+      <animate attributeName="opacity" values="0.8;0.2;0.8" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="75" cy="45" r="0.8">
+      <animate attributeName="opacity" values="0.2;0.8;0.2" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="45" cy="20" r="1.2">
+      <animate attributeName="opacity" values="0.8;0.2;0.8" dur="2.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="60" cy="65" r="0.6">
+      <animate attributeName="opacity" values="0.2;0.8;0.2" dur="1.8s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="25" cy="55" r="0.9">
+      <animate attributeName="opacity" values="0.8;0.2;0.8" dur="2.2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  
+  <!-- Fabric softness waves -->
+  <g stroke="#E0E6FF" stroke-width="0.5" fill="none" opacity="0.5">
+    <path d="M 20 75 Q 25 72 30 75 Q 35 78 40 75">
+      <animate attributeName="d" values="M 20 75 Q 25 72 30 75 Q 35 78 40 75;M 20 75 Q 25 78 30 75 Q 35 72 40 75;M 20 75 Q 25 72 30 75 Q 35 78 40 75" dur="3s" repeatCount="indefinite"/>
+    </path>
+    <path d="M 50 70 Q 55 67 60 70 Q 65 73 70 70">
+      <animate attributeName="d" values="M 50 70 Q 55 67 60 70 Q 65 73 70 70;M 50 70 Q 55 73 60 70 Q 65 67 70 70;M 50 70 Q 55 67 60 70 Q 65 73 70 70" dur="3.5s" repeatCount="indefinite"/>
+    </path>
+  </g>
+</svg>
