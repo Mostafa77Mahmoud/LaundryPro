@@ -10,13 +10,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### July 15, 2025 - Database Migration Complete
-- ✓ Migrated from in-memory data store to PostgreSQL database
-- ✓ Created SQLAlchemy models (User, Category, Order, OrderItem)
-- ✓ Updated all API endpoints to use database queries
-- ✓ Fixed template variables to match new database structure
-- ✓ Maintained commission system (15% app, 85% shop)
-- ✓ Preserved bilingual support with proper RTL layout
+### July 15, 2025 - Major System Enhancements Complete
+- ✓ Migrated from in-memory data store to PostgreSQL database  
+- ✓ Updated commission system to 30% app, 70% shop (from 15%/85%)
+- ✓ Enhanced bilingual support with RTL layout and language toggle
+- ✓ Added full CRUD operations for categories and items
+- ✓ Implemented image upload functionality for categories
+- ✓ Created comprehensive financial reporting system
+- ✓ Added date filtering for analytics and reports
+- ✓ Built detailed order tracking with GPS location support
+- ✓ Enhanced export functionality (CSV with Arabic support)
+- ✓ Added dark/light theme toggle with localStorage persistence
+- ✓ Improved dashboard with real-time PostgreSQL data integration
 
 ## System Architecture
 

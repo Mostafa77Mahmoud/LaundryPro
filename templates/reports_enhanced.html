@@ -1,0 +1,471 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Laundry Service{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h1 class="h2 mb-0">
+            <i class="fas fa-file-export me-2"></i>
+            <span class="lang-en">Detailed Reports</span>
+            <span class="lang-ar">التقارير المفصلة</span>
+        </h1>
+    </div>
+</div>
+
+<!-- Date Filters -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>
+                    <span class="lang-en">Filter Reports</span>
+                    <span class="lang-ar">تصفية التقارير</span>
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">
+                            <span class="lang-en">Start Date</span>
+                            <span class="lang-ar">تاريخ البداية</span>
+                        </label>
+                        <input type="date" id="startDate" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">
+                            <span class="lang-en">End Date</span>
+                            <span class="lang-ar">تاريخ النهاية</span>
+                        </label>
+                        <input type="date" id="endDate" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">
+                            <span class="lang-en">Quick Filters</span>
+                            <span class="lang-ar">تصفية سريعة</span>
+                        </label>
+                        <div class="btn-group d-flex" role="group">
+                            <button type="button" class="btn btn-outline-primary" onclick="setDateFilter('today')">
+                                <span class="lang-en">Today</span>
+                                <span class="lang-ar">اليوم</span>
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" onclick="setDateFilter('week')">
+                                <span class="lang-en">This Week</span>
+                                <span class="lang-ar">هذا الأسبوع</span>
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" onclick="setDateFilter('month')">
+                                <span class="lang-en">This Month</span>
+                                <span class="lang-ar">هذا الشهر</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <button class="btn btn-primary me-2" onclick="loadReports()">
+                            <i class="fas fa-search me-1"></i>
+                            <span class="lang-en">Apply Filters</span>
+                            <span class="lang-ar">تطبيق التصفية</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearFilters()">
+                            <i class="fas fa-times me-1"></i>
+                            <span class="lang-en">Clear</span>
+                            <span class="lang-ar">مسح</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Export Options -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-download me-2"></i>
+                    <span class="lang-en">Export Options</span>
+                    <span class="lang-ar">خيارات التصدير</span>
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-success" onclick="exportReport('csv')">
+                        <i class="fas fa-file-csv me-2"></i>
+                        <span class="lang-en">Export as CSV</span>
+                        <span class="lang-ar">تصدير كـ CSV</span>
+                    </button>
+                    <button class="btn btn-info" onclick="exportReport('pdf')">
+                        <i class="fas fa-file-pdf me-2"></i>
+                        <span class="lang-en">Export as PDF</span>
+                        <span class="lang-ar">تصدير كـ PDF</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4" id="summaryCards">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            <span class="lang-en">Total Orders</span>
+                            <span class="lang-ar">إجمالي الطلبات</span>
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalOrders">0</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            <span class="lang-en">Total Revenue</span>
+                            <span class="lang-ar">إجمالي الإيرادات</span>
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalRevenue">0 SAR</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            <span class="lang-en">App Commission (30%)</span>
+                            <span class="lang-ar">عمولة التطبيق (30%)</span>
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalCommission">0 SAR</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-percent fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            <span class="lang-en">Shop Revenue (70%)</span>
+                            <span class="lang-ar">ربح المتجر (70%)</span>
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="shopRevenue">0 SAR</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-store fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Orders Table -->
+<div class="card shadow mb-4">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <span class="lang-en">Orders Report</span>
+            <span class="lang-ar">تقرير الطلبات</span>
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="ordersTable">
+                <thead>
+                    <tr>
+                        <th>
+                            <span class="lang-en">Order ID</span>
+                            <span class="lang-ar">رقم الطلب</span>
+                        </th>
+                        <th>
+                            <span class="lang-en">Customer</span>
+                            <span class="lang-ar">العميل</span>
+                        </th>
+                        <th>
+                            <span class="lang-en">Date</span>
+                            <span class="lang-ar">التاريخ</span>
+                        </th>
+                        <th>
+                            <span class="lang-en">Payment</span>
+                            <span class="lang-ar">الدفع</span>
+                        </th>
+                        <th>
+                            <span class="lang-en">Total</span>
+                            <span class="lang-ar">المجموع</span>
+                        </th>
+                        <th>
+                            <span class="lang-en">Commission</span>
+                            <span class="lang-ar">العمولة</span>
+                        </th>
+                        <th>
+                            <span class="lang-en">Shop Revenue</span>
+                            <span class="lang-ar">ربح المتجر</span>
+                        </th>
+                        <th>
+                            <span class="lang-en">Status</span>
+                            <span class="lang-ar">الحالة</span>
+                        </th>
+                        <th>
+                            <span class="lang-en">Actions</span>
+                            <span class="lang-ar">الإجراءات</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTableBody">
+                    <!-- Orders will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <span class="lang-en">Order Details</span>
+                    <span class="lang-ar">تفاصيل الطلب</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="orderDetailsContent">
+                <!-- Order details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentReportData = null;
+
+// Load reports based on date filters
+function loadReports() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    let params = new URLSearchParams();
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    
+    fetch(`/api/reports/orders?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.orders) {
+                currentReportData = data;
+                displayReports(data);
+                updateSummaryCards(data);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading reports:', error);
+        });
+}
+
+// Display reports in table
+function displayReports(data) {
+    const tbody = document.getElementById('ordersTableBody');
+    tbody.innerHTML = '';
+    
+    data.orders.forEach(order => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${order.id.substring(0, 8)}...</td>
+            <td>
+                <div><strong>${order.customer_name}</strong></div>
+                <div class="text-muted">${order.customer_phone}</div>
+            </td>
+            <td>${new Date(order.date).toLocaleDateString()}</td>
+            <td>${order.payment_method}</td>
+            <td>${order.subtotal.toFixed(2)} SAR</td>
+            <td>${order.commission_amount.toFixed(2)} SAR</td>
+            <td>${order.shop_revenue.toFixed(2)} SAR</td>
+            <td>
+                <span class="badge ${getStatusBadge(order.status)}">${order.status}</span>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-info" onclick="viewOrderDetails('${order.id}')">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Update summary cards
+function updateSummaryCards(data) {
+    document.getElementById('totalOrders').textContent = data.total_orders;
+    document.getElementById('totalRevenue').textContent = data.total_revenue.toFixed(2) + ' SAR';
+    document.getElementById('totalCommission').textContent = data.total_commission.toFixed(2) + ' SAR';
+    document.getElementById('shopRevenue').textContent = data.total_shop_revenue.toFixed(2) + ' SAR';
+}
+
+// Get status badge class
+function getStatusBadge(status) {
+    switch(status) {
+        case 'pending': return 'bg-warning';
+        case 'washing': return 'bg-primary';
+        case 'ready': return 'bg-info';
+        case 'delivered': return 'bg-success';
+        default: return 'bg-secondary';
+    }
+}
+
+// Set date filter
+function setDateFilter(period) {
+    const today = new Date();
+    const startDate = document.getElementById('startDate');
+    const endDate = document.getElementById('endDate');
+    
+    endDate.value = today.toISOString().split('T')[0];
+    
+    switch(period) {
+        case 'today':
+            startDate.value = today.toISOString().split('T')[0];
+            break;
+        case 'week':
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - 7);
+            startDate.value = weekStart.toISOString().split('T')[0];
+            break;
+        case 'month':
+            const monthStart = new Date(today);
+            monthStart.setMonth(today.getMonth() - 1);
+            startDate.value = monthStart.toISOString().split('T')[0];
+            break;
+    }
+    
+    loadReports();
+}
+
+// Clear filters
+function clearFilters() {
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+    loadReports();
+}
+
+// Export report
+function exportReport(format) {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    const lang = document.getElementById('html-root').getAttribute('lang') || 'en';
+    
+    let params = new URLSearchParams();
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    params.append('lang', lang);
+    
+    if (format === 'csv') {
+        window.location.href = `/api/reports/export?${params}`;
+    } else if (format === 'pdf') {
+        // PDF export would require additional implementation
+        alert('PDF export coming soon!');
+    }
+}
+
+// View order details
+function viewOrderDetails(orderId) {
+    fetch(`/api/reports/orders/${orderId}`)
+        .then(response => response.json())
+        .then(order => {
+            const content = document.getElementById('orderDetailsContent');
+            content.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Customer Information</h6>
+                        <p><strong>Name:</strong> ${order.customer_name}</p>
+                        <p><strong>Phone:</strong> ${order.customer_phone}</p>
+                        <p><strong>Date:</strong> ${new Date(order.date).toLocaleString()}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Order Information</h6>
+                        <p><strong>Status:</strong> ${order.status}</p>
+                        <p><strong>Payment Method:</strong> ${order.payment_method}</p>
+                        <p><strong>Order ID:</strong> ${order.id}</p>
+                    </div>
+                </div>
+                
+                <h6>Order Items</h6>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${order.items.map(item => `
+                            <tr>
+                                <td>${item.name_en} / ${item.name_ar || item.name_en}</td>
+                                <td>${item.quantity}</td>
+                                <td>${item.unit_price.toFixed(2)} SAR</td>
+                                <td>${item.total.toFixed(2)} SAR</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6>Financial Breakdown</h6>
+                        <p><strong>Subtotal:</strong> ${order.subtotal.toFixed(2)} SAR</p>
+                        <p><strong>Commission (30%):</strong> ${order.commission_amount.toFixed(2)} SAR</p>
+                        <p><strong>Shop Revenue (70%):</strong> ${order.shop_revenue.toFixed(2)} SAR</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Location</h6>
+                        ${order.gps_location.latitude ? 
+                            `<p><strong>GPS:</strong> ${order.gps_location.latitude}, ${order.gps_location.longitude}</p>` : 
+                            '<p>No location data</p>'
+                        }
+                    </div>
+                </div>
+            `;
+            
+            new bootstrap.Modal(document.getElementById('orderDetailsModal')).show();
+        })
+        .catch(error => {
+            console.error('Error loading order details:', error);
+        });
+}
+
+// Load reports on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadReports();
+});
+</script>
+{% endblock %}

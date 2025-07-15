@@ -78,8 +78,8 @@ class Order(db.Model):
     def calculate_totals(self):
         """Calculate order totals based on items"""
         self.total_amount = sum(item.quantity * item.unit_price for item in self.items)
-        self.app_commission = self.total_amount * 0.15  # 15% commission
-        self.shop_revenue = self.total_amount * 0.85   # 85% to shop
+        self.app_commission = self.total_amount * 0.30  # 30% commission
+        self.shop_revenue = self.total_amount * 0.70   # 70% to shop
     
     def to_dict(self):
         return {

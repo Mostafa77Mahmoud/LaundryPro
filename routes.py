@@ -60,7 +60,16 @@ def categories_page():
 @app.route('/reports')
 def reports_page():
     """Reports and export page"""
-    return render_template('reports.html')
+    orders = Order.query.order_by(Order.created_at.desc()).all()
+    
+    # Convert to dict format for template
+    orders_data = []
+    for order in orders:
+        order_dict = order.to_dict()
+        order_dict['user_info'] = order.user.to_dict() if order.user else {"name": "Unknown", "phone": "N/A"}
+        orders_data.append(order_dict)
+    
+    return render_template('reports.html', orders=orders_data)
 
 # API Endpoints
 
@@ -144,8 +153,8 @@ def create_order():
         
         # Calculate commission and shop revenue
         order.total_amount = total_amount
-        order.app_commission = total_amount * 0.15
-        order.shop_revenue = total_amount * 0.85
+        order.app_commission = total_amount * 0.30  # 30% commission
+        order.shop_revenue = total_amount * 0.70   # 70% to shop
         
         db.session.commit()
         
@@ -163,13 +172,10 @@ def create_order():
 def get_user_orders(user_id):
     """Get orders for a specific user"""
     try:
-        user_orders = [order.to_dict() for order in data_store.orders.values() 
-                      if order.user_id == user_id]
+        user_orders = Order.query.filter_by(user_id=user_id).order_by(Order.created_at.desc()).all()
+        user_orders_data = [order.to_dict() for order in user_orders]
         
-        # Sort by creation date, newest first
-        user_orders.sort(key=lambda x: x['created_at'], reverse=True)
-        
-        return jsonify({"orders": user_orders}), 200
+        return jsonify({"orders": user_orders_data}), 200
         
     except Exception as e:
         app.logger.error(f"Error getting user orders: {str(e)}")
@@ -348,46 +354,289 @@ def create_category():
     try:
         data = request.get_json()
         
-        category_id = data.get('id') or str(uuid.uuid4())
+        if not data or not data.get('name'):
+            return jsonify({"error": "Category name is required"}), 400
         
-        category_data = {
-            "id": category_id,
-            "name": data['name'],
-            "description": data['description'],
-            "image": data.get('image', '/static/images/default.svg'),
-            "items": data['items']
-        }
+        category_id = data.get('id') or str(uuid.uuid4())
         
         # Create or update category in database
         category = Category.query.get(category_id)
         if category:
             # Update existing category
             category.name_en = data['name']['en']
-            category.name_ar = data['name']['ar'] 
-            category.description_en = data['description']['en']
-            category.description_ar = data['description']['ar']
+            category.name_ar = data['name'].get('ar', data['name']['en'])
+            category.description_en = data.get('description', {}).get('en', '')
+            category.description_ar = data.get('description', {}).get('ar', '')
             category.image = data.get('image', '/static/images/default.svg')
-            category.items = data['items']
+            category.items = data.get('items', [])
         else:
             # Create new category
             category = Category(
                 id=category_id,
                 name_en=data['name']['en'],
-                name_ar=data['name']['ar'],
-                description_en=data['description']['en'],
-                description_ar=data['description']['ar'],
+                name_ar=data['name'].get('ar', data['name']['en']),
+                description_en=data.get('description', {}).get('en', ''),
+                description_ar=data.get('description', {}).get('ar', ''),
                 image=data.get('image', '/static/images/default.svg'),
-                items=data['items']
+                items=data.get('items', [])
             )
             db.session.add(category)
         
         db.session.commit()
         
-        return jsonify({"message": "Category saved successfully", "id": category_id}), 200
+        return jsonify({
+            "message": "Category saved successfully",
+            "category": category.to_dict()
+        }), 200
         
     except Exception as e:
-        app.logger.error(f"Error saving category: {str(e)}")
+        app.logger.error(f"Error creating/updating category: {str(e)}")
         return jsonify({"error": "Failed to save category"}), 500
+
+@app.route('/api/categories/<category_id>', methods=['DELETE'])
+def delete_category(category_id):
+    """Delete a category"""
+    try:
+        category = Category.query.get(category_id)
+        if not category:
+            return jsonify({"error": "Category not found"}), 404
+        
+        db.session.delete(category)
+        db.session.commit()
+        
+        return jsonify({"message": "Category deleted successfully"}), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error deleting category: {str(e)}")
+        return jsonify({"error": "Failed to delete category"}), 500
+
+@app.route('/api/categories/<category_id>/items', methods=['POST'])
+def add_category_item(category_id):
+    """Add item to category"""
+    try:
+        data = request.get_json()
+        
+        if not data or not data.get('name'):
+            return jsonify({"error": "Item name is required"}), 400
+        
+        category = Category.query.get(category_id)
+        if not category:
+            return jsonify({"error": "Category not found"}), 404
+        
+        # Add new item to category items
+        if not category.items:
+            category.items = []
+        
+        new_item = {
+            "id": str(uuid.uuid4()),
+            "name": data['name'],
+            "price": data.get('price', 0)
+        }
+        
+        category.items.append(new_item)
+        db.session.commit()
+        
+        return jsonify({
+            "message": "Item added successfully",
+            "item": new_item
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error adding item to category: {str(e)}")
+        return jsonify({"error": "Failed to add item"}), 500
+
+@app.route('/api/categories/<category_id>/items/<item_id>', methods=['DELETE'])
+def delete_category_item(category_id, item_id):
+    """Delete item from category"""
+    try:
+        category = Category.query.get(category_id)
+        if not category:
+            return jsonify({"error": "Category not found"}), 404
+        
+        if not category.items:
+            return jsonify({"error": "Item not found"}), 404
+        
+        # Remove item from category
+        category.items = [item for item in category.items if item.get('id') != item_id]
+        db.session.commit()
+        
+        return jsonify({"message": "Item deleted successfully"}), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error deleting item from category: {str(e)}")
+        return jsonify({"error": "Failed to delete item"}), 500
+
+# Reports API endpoints
+@app.route('/api/reports/orders')
+def get_orders_report():
+    """Get detailed orders report with filtering"""
+    try:
+        # Get date filters from query parameters
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        query = Order.query
+        
+        if start_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+            query = query.filter(Order.created_at >= start_date)
+        
+        if end_date:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+            # Add 1 day to include the end date
+            end_date = end_date + timedelta(days=1)
+            query = query.filter(Order.created_at < end_date)
+        
+        orders = query.order_by(Order.created_at.desc()).all()
+        
+        # Format detailed report data
+        report_data = []
+        for order in orders:
+            order_data = {
+                "id": order.id,
+                "customer_name": order.user.name if order.user else "Unknown",
+                "customer_phone": order.user.phone if order.user else "N/A",
+                "date": order.created_at.isoformat(),
+                "gps_location": {
+                    "latitude": order.user.latitude if order.user else None,
+                    "longitude": order.user.longitude if order.user else None
+                },
+                "payment_method": order.payment_method,
+                "status": order.status,
+                "items": [
+                    {
+                        "name_en": item.item_name_en,
+                        "name_ar": item.item_name_ar,
+                        "unit_price": item.unit_price,
+                        "quantity": item.quantity,
+                        "total": item.unit_price * item.quantity
+                    }
+                    for item in order.items
+                ],
+                "subtotal": order.total_amount,
+                "commission_rate": 0.30,
+                "commission_amount": order.app_commission,
+                "shop_revenue": order.shop_revenue
+            }
+            report_data.append(order_data)
+        
+        return jsonify({
+            "orders": report_data,
+            "total_orders": len(report_data),
+            "total_revenue": sum(order.total_amount or 0 for order in orders),
+            "total_commission": sum(order.app_commission or 0 for order in orders),
+            "total_shop_revenue": sum(order.shop_revenue or 0 for order in orders)
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error getting orders report: {str(e)}")
+        return jsonify({"error": "Failed to get orders report"}), 500
+
+@app.route('/api/reports/orders/<order_id>')
+def get_order_details(order_id):
+    """Get detailed information for a specific order"""
+    try:
+        order = Order.query.get(order_id)
+        if not order:
+            return jsonify({"error": "Order not found"}), 404
+        
+        order_details = {
+            "id": order.id,
+            "customer_name": order.user.name if order.user else "Unknown",
+            "customer_phone": order.user.phone if order.user else "N/A",
+            "date": order.created_at.isoformat(),
+            "gps_location": {
+                "latitude": order.user.latitude if order.user else None,
+                "longitude": order.user.longitude if order.user else None
+            },
+            "payment_method": order.payment_method,
+            "status": order.status,
+            "items": [
+                {
+                    "name_en": item.item_name_en,
+                    "name_ar": item.item_name_ar,
+                    "unit_price": item.unit_price,
+                    "quantity": item.quantity,
+                    "total": item.unit_price * item.quantity,
+                    "category": item.category.name_en if item.category else "Unknown"
+                }
+                for item in order.items
+            ],
+            "subtotal": order.total_amount,
+            "commission_rate": 0.30,
+            "commission_amount": order.app_commission,
+            "app_profit": order.app_commission,
+            "shop_revenue": order.shop_revenue
+        }
+        
+        return jsonify(order_details), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error getting order details: {str(e)}")
+        return jsonify({"error": "Failed to get order details"}), 500
+
+@app.route('/api/reports/export')
+def export_detailed_report():
+    """Export detailed report as CSV"""
+    try:
+        # Get date filters from query parameters
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        lang = request.args.get('lang', 'en')
+        
+        query = Order.query
+        
+        if start_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+            query = query.filter(Order.created_at >= start_date)
+        
+        if end_date:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+            end_date = end_date + timedelta(days=1)
+            query = query.filter(Order.created_at < end_date)
+        
+        orders = query.order_by(Order.created_at.desc()).all()
+        
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Write headers based on language
+        if lang == 'ar':
+            headers = ['رقم الطلب', 'اسم العميل', 'رقم الهاتف', 'التاريخ', 'طريقة الدفع', 
+                      'المبلغ الإجمالي', 'العمولة (30%)', 'ربح المتجر (70%)', 'الحالة']
+        else:
+            headers = ['Order ID', 'Customer Name', 'Phone', 'Date', 'Payment Method', 
+                      'Total Amount', 'Commission (30%)', 'Shop Revenue (70%)', 'Status']
+        
+        writer.writerow(headers)
+        
+        # Write order data
+        for order in orders:
+            writer.writerow([
+                order.id,
+                order.user.name if order.user else 'Unknown',
+                order.user.phone if order.user else 'N/A',
+                order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                order.payment_method,
+                order.total_amount,
+                order.app_commission,
+                order.shop_revenue,
+                order.status
+            ])
+        
+        output.seek(0)
+        
+        filename = f'orders_report_{datetime.now().strftime("%Y%m%d")}.csv'
+        return send_file(
+            io.BytesIO(output.getvalue().encode('utf-8')),
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name=filename
+        )
+        
+    except Exception as e:
+        app.logger.error(f"Error exporting detailed report: {str(e)}")
+        return jsonify({"error": "Failed to export report"}), 500
 
 def allowed_file(filename):
     """Check if file extension is allowed"""

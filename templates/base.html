@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en" dir="ltr" id="html-root">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,15 +14,37 @@
     <!-- Custom CSS -->
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
     
+    <!-- RTL Support -->
+    <style>
+        .rtl { direction: rtl; }
+        .rtl .navbar-nav { margin-left: auto; margin-right: 0; }
+        .rtl .text-start { text-align: right !important; }
+        .rtl .text-end { text-align: left !important; }
+        .rtl .me-2 { margin-right: 0 !important; margin-left: 0.5rem !important; }
+        .rtl .ms-2 { margin-left: 0 !important; margin-right: 0.5rem !important; }
+        .lang-ar { display: none; }
+        .rtl .lang-en { display: none; }
+        .rtl .lang-ar { display: inline; }
+        
+        [data-theme="dark"] {
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+        [data-theme="dark"] .navbar-dark { background-color: #2d3436 !important; }
+        [data-theme="dark"] .card { background-color: #2d3436; border-color: #3a3a3a; }
+        [data-theme="dark"] .table-dark { background-color: #2d3436; }
+    </style>
+    
     {% block head %}{% endblock %}
 </head>
-<body>
+<body data-theme="light">
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <a class="navbar-brand" href="{{ url_for('dashboard') }}">
                 <i class="fas fa-tshirt me-2"></i>
-                Laundry Service
+                <span class="lang-en">Laundry Service</span>
+                <span class="lang-ar">خدمة الغسيل</span>
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -34,31 +56,41 @@
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" 
                            href="{{ url_for('dashboard') }}">
-                            <i class="fas fa-chart-line me-1"></i>Dashboard
+                            <i class="fas fa-chart-line me-1"></i>
+                            <span class="lang-en">Dashboard</span>
+                            <span class="lang-ar">لوحة التحكم</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'orders_page' %}active{% endif %}" 
                            href="{{ url_for('orders_page') }}">
-                            <i class="fas fa-list-alt me-1"></i>Orders
+                            <i class="fas fa-list-alt me-1"></i>
+                            <span class="lang-en">Orders</span>
+                            <span class="lang-ar">الطلبات</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'categories_page' %}active{% endif %}" 
                            href="{{ url_for('categories_page') }}">
-                            <i class="fas fa-tags me-1"></i>Categories
+                            <i class="fas fa-tags me-1"></i>
+                            <span class="lang-en">Categories</span>
+                            <span class="lang-ar">الفئات</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'analytics_page' %}active{% endif %}" 
                            href="{{ url_for('analytics_page') }}">
-                            <i class="fas fa-chart-bar me-1"></i>Analytics
+                            <i class="fas fa-chart-bar me-1"></i>
+                            <span class="lang-en">Analytics</span>
+                            <span class="lang-ar">التحليلات</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'reports_page' %}active{% endif %}" 
                            href="{{ url_for('reports_page') }}">
-                            <i class="fas fa-file-export me-1"></i>Reports
+                            <i class="fas fa-file-export me-1"></i>
+                            <span class="lang-en">Reports</span>
+                            <span class="lang-ar">التقارير</span>
                         </a>
                     </li>
                 </ul>
@@ -85,6 +117,71 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    
+    <!-- Language and Theme Toggle -->
+    <script>
+        // Language toggle functionality
+        document.getElementById('langToggle').addEventListener('click', function() {
+            const html = document.getElementById('html-root');
+            const langText = document.getElementById('langText');
+            
+            if (html.classList.contains('rtl')) {
+                html.classList.remove('rtl');
+                html.setAttribute('dir', 'ltr');
+                html.setAttribute('lang', 'en');
+                langText.textContent = 'عربي';
+                localStorage.setItem('language', 'en');
+            } else {
+                html.classList.add('rtl');
+                html.setAttribute('dir', 'rtl');
+                html.setAttribute('lang', 'ar');
+                langText.textContent = 'English';
+                localStorage.setItem('language', 'ar');
+            }
+        });
+        
+        // Theme toggle functionality
+        document.getElementById('themeToggle').addEventListener('click', function() {
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            
+            if (body.getAttribute('data-theme') === 'light') {
+                body.setAttribute('data-theme', 'dark');
+                themeIcon.className = 'fas fa-moon';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.setAttribute('data-theme', 'light');
+                themeIcon.className = 'fas fa-sun';
+                localStorage.setItem('theme', 'light');
+            }
+        });
+        
+        // Initialize theme and language on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            const savedLang = localStorage.getItem('language') || 'en';
+            
+            // Set theme
+            document.body.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+            
+            // Set language
+            const html = document.getElementById('html-root');
+            const langText = document.getElementById('langText');
+            
+            if (savedLang === 'ar') {
+                html.classList.add('rtl');
+                html.setAttribute('dir', 'rtl');
+                html.setAttribute('lang', 'ar');
+                langText.textContent = 'English';
+            } else {
+                html.classList.remove('rtl');
+                html.setAttribute('dir', 'ltr');
+                html.setAttribute('lang', 'en');
+                langText.textContent = 'عربي';
+            }
+        });
+    </script>
     
     {% block scripts %}{% endblock %}
 </body>
