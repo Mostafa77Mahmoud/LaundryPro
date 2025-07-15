@@ -152,7 +152,7 @@ class Dashboard {
             const keys = ['dashboard', 'orders', 'categories', 'analytics', 'reports'];
             if (keys[index] && translations[lang][keys[index]]) {
                 const icon = link.querySelector('i');
-                const textNode = link.childNodes.find(node => node.nodeType === Node.TEXT_NODE);
+                const textNode = Array.from(link.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
                 if (icon && textNode) {
                     textNode.textContent = ' ' + translations[lang][keys[index]];
                 } else if (icon) {
