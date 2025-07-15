@@ -7,7 +7,8 @@
     <div class="col-12">
         <h1 class="h2 mb-3">
             <i class="fas fa-chart-line me-2"></i>
-            Today's Dashboard
+            <span class="lang-en">Today's Dashboard</span>
+            <span class="lang-ar">لوحة التحكم اليوم</span>
             <small class="text-muted">{{ stats.date }}</small>
         </h1>
     </div>
@@ -21,7 +22,8 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                            Total Orders
+                            <span class="lang-en">Total Orders</span>
+                            <span class="lang-ar">إجمالي الطلبات</span>
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
                             {{ stats.today_orders }}
@@ -41,7 +43,8 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            Total Revenue
+                            <span class="lang-en">Total Revenue</span>
+                            <span class="lang-ar">إجمالي الإيرادات</span>
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
                             {{ "%.2f"|format(stats.today_revenue) }} SAR
@@ -61,7 +64,8 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                            App Commission
+                            <span class="lang-en">App Commission (30%)</span>
+                            <span class="lang-ar">عمولة التطبيق (30%)</span>
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
                             {{ "%.2f"|format(stats.today_commission) }} SAR
@@ -81,7 +85,8 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                            Shop Revenue
+                            <span class="lang-en">Shop Revenue (70%)</span>
+                            <span class="lang-ar">ربح المتجر (70%)</span>
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
                             {{ "%.2f"|format(stats.today_shop_revenue) }} SAR
@@ -102,7 +107,10 @@
     <div class="col-xl-6 col-lg-6 mb-3">
         <div class="card shadow">
             <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-primary">Order Status Distribution</h6>
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <span class="lang-en">Order Status Distribution</span>
+                    <span class="lang-ar">توزيع حالات الطلبات</span>
+                </h6>
             </div>
             <div class="card-body">
                 <canvas id="orderStatusChart"></canvas>
@@ -114,7 +122,10 @@
     <div class="col-xl-6 col-lg-6 mb-3">
         <div class="card shadow">
             <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-primary">Payment Methods</h6>
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <span class="lang-en">Payment Methods</span>
+                    <span class="lang-ar">طرق الدفع</span>
+                </h6>
             </div>
             <div class="card-body">
                 <canvas id="paymentMethodsChart"></canvas>
@@ -128,20 +139,44 @@
     <div class="col-12">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Recent Orders</h6>
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <span class="lang-en">Recent Orders</span>
+                    <span class="lang-ar">الطلبات الأخيرة</span>
+                </h6>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-bordered" id="recentOrdersTable">
                         <thead>
                             <tr>
-                                <th>Order ID</th>
-                                <th>Customer</th>
-                                <th>Items</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                                <th>Payment</th>
-                                <th>Actions</th>
+                                <th>
+                                    <span class="lang-en">Order ID</span>
+                                    <span class="lang-ar">رقم الطلب</span>
+                                </th>
+                                <th>
+                                    <span class="lang-en">Customer</span>
+                                    <span class="lang-ar">العميل</span>
+                                </th>
+                                <th>
+                                    <span class="lang-en">Items</span>
+                                    <span class="lang-ar">الخدمات</span>
+                                </th>
+                                <th>
+                                    <span class="lang-en">Total</span>
+                                    <span class="lang-ar">المجموع</span>
+                                </th>
+                                <th>
+                                    <span class="lang-en">Status</span>
+                                    <span class="lang-ar">الحالة</span>
+                                </th>
+                                <th>
+                                    <span class="lang-en">Payment</span>
+                                    <span class="lang-ar">الدفع</span>
+                                </th>
+                                <th>
+                                    <span class="lang-en">Actions</span>
+                                    <span class="lang-ar">الإجراءات</span>
+                                </th>
                             </tr>
                         </thead>
                         <tbody id="recentOrdersBody">

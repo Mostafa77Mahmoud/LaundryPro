@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timedelta
 from flask import render_template, request, jsonify, redirect, url_for, send_file, flash
 from werkzeug.utils import secure_filename
-from app import app, db
+from app import app, db, admin_required
 from models import User, Order, Category, OrderItem
 from analytics import AnalyticsEngine
 
@@ -13,6 +13,7 @@ from analytics import AnalyticsEngine
 # analytics = None
 
 @app.route('/')
+@admin_required
 def dashboard():
     """Main dashboard view"""
     # Simple stats for now - using all orders to avoid date filtering issues
@@ -32,11 +33,13 @@ def dashboard():
     return render_template('dashboard.html', stats=today_stats)
 
 @app.route('/analytics')
+@admin_required
 def analytics_page():
     """Analytics dashboard"""
     return render_template('analytics.html')
 
 @app.route('/orders')
+@admin_required
 def orders_page():
     """Orders management page"""
     orders = Order.query.order_by(Order.created_at.desc()).all()
@@ -51,6 +54,7 @@ def orders_page():
     return render_template('orders.html', orders=orders_data)
 
 @app.route('/categories')
+@admin_required
 def categories_page():
     """Categories management page"""
     categories = Category.query.all()
@@ -58,6 +62,7 @@ def categories_page():
     return render_template('categories.html', categories=categories_data)
 
 @app.route('/reports')
+@admin_required
 def reports_page():
     """Reports and export page"""
     orders = Order.query.order_by(Order.created_at.desc()).all()

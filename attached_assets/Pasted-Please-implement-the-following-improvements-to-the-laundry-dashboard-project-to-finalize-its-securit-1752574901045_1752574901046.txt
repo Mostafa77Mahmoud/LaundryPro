@@ -1,0 +1,25 @@
+Please implement the following improvements to the laundry dashboard project to finalize its security and bilingual support:
+
+🔐 1. Add a simple password-based admin login protection:
+- Create a `/login` route and a basic login page.
+- The admin password should be stored in a secure constant (e.g., `ADMIN_SECRET`) in a separate config file (e.g., `config.py`).
+- When a user logs in with the correct password, set a cookie (e.g., `admin_secret`) to maintain the session.
+- All protected routes (`/dashboard`, `/orders`, `/analytics`, `/categories`, `/reports`) should redirect to `/login` if the cookie is missing or invalid.
+- Add a `/logout` route to clear the session.
+- Make sure this login system is simple and secure, with the password being hardcoded and only changeable by editing the source code.
+
+🌍 2. Ensure full Arabic language support:
+- Review all pages and templates to ensure **every label, title, button, form input, and section** is properly translated to Arabic.
+- Check and fix any parts of the UI that remain in English when Arabic is selected.
+- Ensure all dynamic content (like order status, item labels, export buttons, filter options, analytics charts, etc.) supports bilingual display.
+- Implement correct **RTL layout** on all Arabic views.
+- Update the language toggle logic to persist the selected language using localStorage and apply it across all routes.
+
+📝 3. Extra polish:
+- Add a note in the replit.md file documenting how to change the admin password from `config.py`.
+- Ensure that uploading, editing, deleting categories or items works the same in Arabic and English.
+- Test export features (CSV/PDF) in Arabic mode — file content and labels should be in Arabic and properly aligned (RTL where applicable).
+
+Make sure the login page and all protected pages are also bilingual. Provide Arabic/English labels on the login form and feedback messages.
+
+Confirm that the full dashboard is now secure and RTL-ready with proper translations and that everything functions smoothly in both languages.

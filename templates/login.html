@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Laundry Service</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- RTL Support -->
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .rtl { direction: rtl; }
+        .rtl .text-start { text-align: right !important; }
+        .rtl .text-end { text-align: left !important; }
+        .rtl .me-2 { margin-right: 0 !important; margin-left: 0.5rem !important; }
+        .rtl .ms-2 { margin-left: 0 !important; margin-right: 0.5rem !important; }
+        .lang-ar { display: none; }
+        .rtl .lang-en { display: none; }
+        .rtl .lang-ar { display: inline; }
+        
+        [data-theme="dark"] {
+            background: linear-gradient(135deg, #2d3436 0%, #636e72 100%);
+        }
+        [data-theme="dark"] .login-card {
+            background: #2d3436;
+            color: #ffffff;
+        }
+        [data-theme="dark"] .form-control {
+            background-color: #636e72;
+            border-color: #636e72;
+            color: #ffffff;
+        }
+        [data-theme="dark"] .form-control:focus {
+            background-color: #636e72;
+            border-color: #74b9ff;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="login-card">
+                    <!-- Header -->
+                    <div class="text-center mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div></div>
+                            <h2 class="mb-0">
+                                <i class="fas fa-tshirt me-2"></i>
+                                <span class="lang-en">Laundry Service</span>
+                                <span class="lang-ar">خدمة الغسيل</span>
+                            </h2>
+                            <div>
+                                <button class="btn btn-outline-primary btn-sm me-2" id="themeToggle">
+                                    <i class="fas fa-sun" id="themeIcon"></i>
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm" id="langToggle">
+                                    <span id="langText">عربي</span>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-muted">
+                            <span class="lang-en">Admin Dashboard Login</span>
+                            <span class="lang-ar">تسجيل دخول لوحة الإدارة</span>
+                        </p>
+                    </div>
+                    
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <!-- Login Form -->
+                    <form method="POST" action="{{ url_for('login') }}">
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock me-2"></i>
+                                <span class="lang-en">Admin Password</span>
+                                <span class="lang-ar">كلمة مرور المدير</span>
+                            </label>
+                            <input type="password" class="form-control" id="password" name="password" required
+                                   placeholder="Enter admin password">
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt me-2"></i>
+                                <span class="lang-en">Login</span>
+                                <span class="lang-ar">تسجيل الدخول</span>
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Footer -->
+                    <div class="text-center mt-4">
+                        <small class="text-muted">
+                            <span class="lang-en">© 2025 Laundry Service Management System</span>
+                            <span class="lang-ar">© 2025 نظام إدارة خدمة الغسيل</span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Language and Theme Toggle -->
+    <script>
+        // Language toggle functionality
+        document.getElementById('langToggle').addEventListener('click', function() {
+            const html = document.getElementById('html-root');
+            const langText = document.getElementById('langText');
+            
+            if (html.classList.contains('rtl')) {
+                html.classList.remove('rtl');
+                html.setAttribute('dir', 'ltr');
+                html.setAttribute('lang', 'en');
+                langText.textContent = 'عربي';
+                localStorage.setItem('language', 'en');
+            } else {
+                html.classList.add('rtl');
+                html.setAttribute('dir', 'rtl');
+                html.setAttribute('lang', 'ar');
+                langText.textContent = 'English';
+                localStorage.setItem('language', 'ar');
+            }
+        });
+        
+        // Theme toggle functionality
+        document.getElementById('themeToggle').addEventListener('click', function() {
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            
+            if (body.getAttribute('data-theme') === 'light') {
+                body.setAttribute('data-theme', 'dark');
+                themeIcon.className = 'fas fa-moon';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.setAttribute('data-theme', 'light');
+                themeIcon.className = 'fas fa-sun';
+                localStorage.setItem('theme', 'light');
+            }
+        });
+        
+        // Initialize theme and language on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            const savedLang = localStorage.getItem('language') || 'en';
+            
+            // Set theme
+            document.body.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+            
+            // Set language
+            const html = document.getElementById('html-root');
+            const langText = document.getElementById('langText');
+            
+            if (savedLang === 'ar') {
+                html.classList.add('rtl');
+                html.setAttribute('dir', 'rtl');
+                html.setAttribute('lang', 'ar');
+                langText.textContent = 'English';
+            } else {
+                html.classList.remove('rtl');
+                html.setAttribute('dir', 'ltr');
+                html.setAttribute('lang', 'en');
+                langText.textContent = 'عربي';
+            }
+        });
+    </script>
+</body>
+</html>
