@@ -5,8 +5,8 @@ import uuid
 from datetime import datetime, timedelta
 from flask import render_template, request, jsonify, redirect, url_for, send_file, flash
 from werkzeug.utils import secure_filename
-from app import app
-from database import db, User, Order, Category, OrderItem
+from app import app, db
+from models import User, Order, Category, OrderItem
 from analytics import AnalyticsEngine
 
 # Initialize analytics engine - commented out for now

@@ -1,21 +1,22 @@
 from datetime import datetime, timedelta
 from collections import defaultdict
 from typing import Dict, List, Any
+from models import Order, OrderItem, Category, User
+from sqlalchemy import func
 
 class AnalyticsEngine:
-    def __init__(self, data_store):
-        self.data_store = data_store
+    def __init__(self, db_session):
+        self.db = db_session
     
     def get_today_summary(self) -> Dict[str, Any]:
         """Get today's key metrics summary"""
         today = datetime.now().date()
-        today_orders = [order for order in self.data_store.orders.values() 
-                       if order.created_at.date() == today]
+        today_orders = Order.query.filter(func.date(Order.created_at) == today).all()
         
         total_orders = len(today_orders)
-        total_revenue = sum(order.total_amount for order in today_orders)
-        total_commission = sum(order.commission_amount for order in today_orders)
-        shop_revenue = sum(order.shop_amount for order in today_orders)
+        total_revenue = sum(order.total_amount or 0 for order in today_orders)
+        total_commission = sum(order.app_commission or 0 for order in today_orders)
+        shop_revenue = sum(order.shop_revenue or 0 for order in today_orders)
         
         # Status breakdown
         status_counts = defaultdict(int)
@@ -44,13 +45,15 @@ class AnalyticsEngine:
         
         daily_data = defaultdict(lambda: {"revenue": 0, "commission": 0, "shop_amount": 0, "orders": 0})
         
-        for order in self.data_store.orders.values():
+        orders = Order.query.filter(func.date(Order.created_at) >= start_date, 
+                                   func.date(Order.created_at) <= end_date).all()
+        
+        for order in orders:
             order_date = order.created_at.date()
-            if start_date <= order_date <= end_date:
-                daily_data[order_date]["revenue"] += order.total_amount
-                daily_data[order_date]["commission"] += order.commission_amount
-                daily_data[order_date]["shop_amount"] += order.shop_amount
-                daily_data[order_date]["orders"] += 1
+            daily_data[order_date]["revenue"] += order.total_amount or 0
+            daily_data[order_date]["commission"] += order.app_commission or 0
+            daily_data[order_date]["shop_amount"] += order.shop_revenue or 0
+            daily_data[order_date]["orders"] += 1
         
         # Format for Chart.js
         labels = []
@@ -101,9 +104,10 @@ class AnalyticsEngine:
         payment_counts = defaultdict(int)
         payment_revenue = defaultdict(float)
         
-        for order in self.data_store.orders.values():
+        orders = Order.query.all()
+        for order in orders:
             payment_counts[order.payment_method] += 1
-            payment_revenue[order.payment_method] += order.total_amount
+            payment_revenue[order.payment_method] += order.total_amount or 0
         
         labels = list(payment_counts.keys())
         data = list(payment_counts.values())
@@ -132,11 +136,11 @@ class AnalyticsEngine:
         service_counts = defaultdict(int)
         service_revenue = defaultdict(float)
         
-        for order in self.data_store.orders.values():
-            for item in order.items:
-                service_name = item.get('item_name', 'Unknown')
-                service_counts[service_name] += item.get('quantity', 1)
-                service_revenue[service_name] += item.get('total_price', 0)
+        order_items = OrderItem.query.all()
+        for item in order_items:
+            service_name = item.item_name_en or 'Unknown'
+            service_counts[service_name] += item.quantity or 1
+            service_revenue[service_name] += (item.unit_price or 0) * (item.quantity or 1)
         
         # Get top 10 services
         top_services = sorted(service_counts.items(), key=lambda x: x[1], reverse=True)[:10]
@@ -161,7 +165,8 @@ class AnalyticsEngine:
         """Get order status distribution"""
         status_counts = defaultdict(int)
         
-        for order in self.data_store.orders.values():
+        orders = Order.query.all()
+        for order in orders:
             status_counts[order.status] += 1
         
         labels = list(status_counts.keys())
