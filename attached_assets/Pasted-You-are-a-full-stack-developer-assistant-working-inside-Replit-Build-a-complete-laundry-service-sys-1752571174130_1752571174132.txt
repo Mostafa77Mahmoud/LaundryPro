@@ -1,0 +1,56 @@
+You are a full-stack developer assistant working inside Replit. Build a complete laundry service system in one Replit project, including backend, admin dashboard, and chatbot.
+
+This project must support mobile app clients and a dashboard for the laundry shop itself.
+
+🔸 USERS (No login system):
+- Do NOT use passwords, login, or JWT.
+- When the app is first opened, users enter:
+  - Name
+  - Phone number
+  - Allow GPS access (lat/lng)
+- Save users to MongoDB via: POST /users
+- Return a `user_id` which will be used in all future requests
+
+🔸 BACKEND:
+- Use **FastAPI (Python)** with **MongoDB Atlas** (use Motor async driver)
+- Enable **CORS** so the mobile app (e.g., Expo) can connect
+- API Endpoints:
+  - `POST /users` → Register new user
+  - `GET /prices` → List available services & prices (grouped by category: clothes, carpets, bedding, dyeing)
+  - `POST /orders` → Create new laundry order
+  - `GET /orders/{user_id}` → List orders for a specific user
+  - `PATCH /orders/{order_id}/status` → Update order status (Washing, Ready, Delivered)
+  - `POST /chat` → Simple chatbot that answers questions about:
+    - Prices ("How much is a blanket?")
+    - Order tracking ("Where is my order?")
+    - Requesting new order ("I want to wash my clothes")
+
+🔸 DASHBOARD (for use on a computer at the laundry shop):
+- Build with **HTML + HTMX + Tailwind CSS**
+- Show incoming orders in real-time (WebSocket or polling)
+- Update status of each order
+- See user info (name, phone, location)
+- Analytics section (daily orders, income, service usage)
+
+🔸 UI FEATURES:
+- Support both Arabic and English languages using `i18n` and RTL support
+- Support **dark mode and light mode** (auto-detect and toggle option)
+- Basic responsive layout for dashboard (can be viewed on tablets)
+
+🔸 TECHNICAL REQUIREMENTS:
+- Organize code with these folders:
+  - `/main.py` → FastAPI entry point
+  - `/models/` → user.py, order.py, price_item.py
+  - `/database/` → db.py (MongoDB connection)
+  - `/templates/` → dashboard HTML pages (with Jinja2)
+  - `/static/` → Tailwind CSS
+  - `.env` → MongoDB URI and secret keys
+- Use `motor` async client for MongoDB
+- Enable public HTTPS endpoint (via Replit hosting) for mobile app access
+
+Start by generating:
+- `main.py` with FastAPI and routing setup
+- Models for users, orders, prices
+- HTML dashboard template page
+- One endpoint for creating users (/users)
+- Seed a sample price list

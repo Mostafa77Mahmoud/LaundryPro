@@ -1,0 +1,73 @@
+Please add the following features to the current laundry service project:
+
+🔸 1. Service Categories & Pricing:
+
+- Organize the services into categories, each with a name, description, image, and list of items with prices.
+- Example categories:
+  - "Carpet Cleaning" (غسيل سجاد)
+  - "Women's Clothing" (ملابس حريمي)
+  - "Upholstery Cleaning" (غسيل انتريهات)
+  - "Bedding & Blankets" (بطاطين ومفروشات)
+
+Each category should:
+- Have a unique ID
+- Include an image URL (stored in `/static/images/`)
+- Contain multiple service items (each with name + price)
+
+Example service item:
+```json
+{
+  "category": "Carpet Cleaning",
+  "image": "/static/images/carpet.jpg",
+  "items": [
+    { "name": "Small Rug", "price": 40 },
+    { "name": "Large Carpet", "price": 100 }
+  ]
+}
+Create a /prices API endpoint that returns all categories and their services in structured JSON.
+
+Also, display these categories with images and prices in the dashboard (admin view) for easy reference and editing.
+
+🔸 2. Add Image Upload Support:
+
+Allow the admin to upload or change the category image via the dashboard
+
+Store images in /static/uploads/ folder
+
+🔸 3. Client App Display (structure suggestion for mobile):
+
+Organize the app home screen into sections by category:
+
+Each section displays the category image and title
+
+Inside, show the list of service items and their prices
+
+Allow the user to select quantity per item when placing an order
+
+Ensure this category structure is API-driven so that the mobile app can display it dynamically.
+
+🔸 4. Arabic / English Labels:
+
+Add bilingual support for category names and service item names using a structure like:
+
+json
+Copy
+Edit
+{ "name": { "en": "Large Carpet", "ar": "سجادة كبيرة" } }
+The dashboard and APIs should return both language options.
+
+yaml
+Copy
+Edit
+
+---
+
+## ✅ اللي هيحصل لما تبعت البرومبت ده:
+
+| النتيجة | التفاصيل |
+|---------|----------|
+| `/prices` API | بيرجع كل الأقسام + الأصناف + الصور + السعر |
+| dashboard | بيعرض الأقسام بالصور – يقدر يضيف/يعدل |
+| upload | إدارة صور الأقسام من خلال admin panel |
+| structure | منظم وسهل للعرض داخل تطبيق الهاتف |
+| multilingual | كل اسم عنده نسخة عربي وإنجليزي |
