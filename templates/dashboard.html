@@ -24,7 +24,7 @@
                             Total Orders
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {{ stats.total_orders }}
+                            {{ stats.today_orders }}
                         </div>
                     </div>
                     <div class="col-auto">
@@ -44,7 +44,7 @@
                             Total Revenue
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {{ "%.2f"|format(stats.total_revenue) }} SAR
+                            {{ "%.2f"|format(stats.today_revenue) }} SAR
                         </div>
                     </div>
                     <div class="col-auto">
@@ -64,7 +64,7 @@
                             App Commission
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {{ "%.2f"|format(stats.total_commission) }} SAR
+                            {{ "%.2f"|format(stats.today_commission) }} SAR
                         </div>
                     </div>
                     <div class="col-auto">
@@ -84,7 +84,7 @@
                             Shop Revenue
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {{ "%.2f"|format(stats.shop_revenue) }} SAR
+                            {{ "%.2f"|format(stats.today_shop_revenue) }} SAR
                         </div>
                     </div>
                     <div class="col-auto">

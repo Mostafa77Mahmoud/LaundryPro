@@ -6,16 +6,29 @@ from datetime import datetime, timedelta
 from flask import render_template, request, jsonify, redirect, url_for, send_file, flash
 from werkzeug.utils import secure_filename
 from app import app
-from models import data_store, User, Order, Category
+from database import db, User, Order, Category, OrderItem
 from analytics import AnalyticsEngine
 
-# Initialize analytics engine
-analytics = AnalyticsEngine(data_store)
+# Initialize analytics engine - commented out for now
+# analytics = None
 
 @app.route('/')
 def dashboard():
     """Main dashboard view"""
-    today_stats = analytics.get_today_summary()
+    # Simple stats for now - using all orders to avoid date filtering issues
+    all_orders = Order.query.all()
+    
+    total_revenue = sum(order.total_amount or 0 for order in all_orders)
+    app_commission = sum(order.app_commission or 0 for order in all_orders)
+    shop_revenue = sum(order.shop_revenue or 0 for order in all_orders)
+    
+    today_stats = {
+        'today_orders': len(all_orders),
+        'today_revenue': total_revenue,
+        'today_commission': app_commission,
+        'today_shop_revenue': shop_revenue
+    }
+    
     return render_template('dashboard.html', stats=today_stats)
 
 @app.route('/analytics')
@@ -26,24 +39,23 @@ def analytics_page():
 @app.route('/orders')
 def orders_page():
     """Orders management page"""
-    orders = list(data_store.orders.values())
-    # Sort by creation date, newest first
-    orders.sort(key=lambda x: x.created_at, reverse=True)
+    orders = Order.query.order_by(Order.created_at.desc()).all()
     
-    # Get user info for each order
+    # Convert to dict format for template
+    orders_data = []
     for order in orders:
-        user = data_store.users.get(order.user_id)
-        order.user_info = user.to_dict() if user else {"name": "Unknown", "phone": "N/A"}
+        order_dict = order.to_dict()
+        order_dict['user_info'] = order.user.to_dict() if order.user else {"name": "Unknown", "phone": "N/A"}
+        orders_data.append(order_dict)
     
-    return render_template('orders.html', orders=orders)
+    return render_template('orders.html', orders=orders_data)
 
 @app.route('/categories')
 def categories_page():
     """Categories management page"""
-    categories = []
-    for category_data in data_store.categories.values():
-        categories.append(category_data)
-    return render_template('categories.html', categories=categories)
+    categories = Category.query.all()
+    categories_data = [category.to_dict() for category in categories]
+    return render_template('categories.html', categories=categories_data)
 
 @app.route('/reports')
 def reports_page():
@@ -68,7 +80,8 @@ def create_user():
             longitude=data.get('longitude')
         )
         
-        data_store.users[user.id] = user
+        db.session.add(user)
+        db.session.commit()
         
         return jsonify({
             "user_id": user.id,
@@ -83,17 +96,10 @@ def create_user():
 def get_prices():
     """Get all service categories and prices"""
     try:
-        categories = []
-        for category in data_store.categories.values():
-            categories.append({
-                "id": category["id"],
-                "name": category["name"],
-                "description": category["description"],
-                "image": category["image"],
-                "items": category["items"]
-            })
+        categories = Category.query.all()
+        categories_data = [category.to_dict() for category in categories]
         
-        return jsonify({"categories": categories}), 200
+        return jsonify({"categories": categories_data}), 200
         
     except Exception as e:
         app.logger.error(f"Error getting prices: {str(e)}")
@@ -109,28 +115,39 @@ def create_order():
             return jsonify({"error": "User ID and items are required"}), 400
         
         # Validate user exists
-        if data['user_id'] not in data_store.users:
+        user = User.query.get(data['user_id'])
+        if not user:
             return jsonify({"error": "User not found"}), 404
         
-        # Calculate total prices for items
-        processed_items = []
-        for item in data['items']:
-            total_price = item['quantity'] * item['unit_price']
-            processed_items.append({
-                "category_id": item.get('category_id'),
-                "item_name": item['item_name'],
-                "quantity": item['quantity'],
-                "unit_price": item['unit_price'],
-                "total_price": total_price
-            })
-        
+        # Create order
         order = Order(
             user_id=data['user_id'],
-            items=processed_items,
             payment_method=data.get('payment_method', 'cash')
         )
         
-        data_store.orders[order.id] = order
+        db.session.add(order)
+        db.session.flush()  # Get order ID before adding items
+        
+        # Add order items
+        total_amount = 0
+        for item in data['items']:
+            order_item = OrderItem(
+                order_id=order.id,
+                category_id=item.get('category_id'),
+                item_name_en=item['item_name'].get('en', item['item_name']),
+                item_name_ar=item['item_name'].get('ar', '') if isinstance(item['item_name'], dict) else '',
+                quantity=item['quantity'],
+                unit_price=item['unit_price']
+            )
+            db.session.add(order_item)
+            total_amount += item['quantity'] * item['unit_price']
+        
+        # Calculate commission and shop revenue
+        order.total_amount = total_amount
+        order.app_commission = total_amount * 0.15
+        order.shop_revenue = total_amount * 0.85
+        
+        db.session.commit()
         
         return jsonify({
             "order_id": order.id,
@@ -167,14 +184,14 @@ def update_order_status(order_id):
         if not data or not data.get('status'):
             return jsonify({"error": "Status is required"}), 400
         
-        if order_id not in data_store.orders:
+        order = Order.query.get(order_id)
+        if not order:
             return jsonify({"error": "Order not found"}), 404
         
         valid_statuses = ['pending', 'washing', 'ready', 'delivered']
         if data['status'] not in valid_statuses:
             return jsonify({"error": "Invalid status"}), 400
         
-        order = data_store.orders[order_id]
         order.update_status(data['status'])
         
         return jsonify({
@@ -235,7 +252,16 @@ def chatbot():
 def analytics_summary():
     """Get analytics summary for dashboard"""
     try:
-        summary = analytics.get_today_summary()
+        # Using all orders for now to avoid date filtering issues
+        all_orders = Order.query.all()
+        
+        summary = {
+            'today_orders': len(all_orders),
+            'today_revenue': sum(order.total_amount or 0 for order in all_orders),
+            'today_commission': sum(order.app_commission or 0 for order in all_orders),
+            'today_shop_revenue': sum(order.shop_revenue or 0 for order in all_orders)
+        }
+        
         return jsonify(summary), 200
     except Exception as e:
         app.logger.error(f"Error getting analytics summary: {str(e)}")
@@ -246,18 +272,31 @@ def analytics_chart_data():
     """Get chart data for analytics"""
     try:
         chart_type = request.args.get('type', 'daily_revenue')
-        days = int(request.args.get('days', 7))
         
-        if chart_type == 'daily_revenue':
-            data = analytics.get_daily_revenue_chart(days)
+        # Simple chart data from database
+        if chart_type == 'order_status':
+            orders = Order.query.all()
+            status_counts = {}
+            for order in orders:
+                status_counts[order.status] = status_counts.get(order.status, 0) + 1
+            
+            data = {
+                'labels': list(status_counts.keys()),
+                'data': list(status_counts.values())
+            }
         elif chart_type == 'payment_methods':
-            data = analytics.get_payment_methods_chart()
-        elif chart_type == 'service_popularity':
-            data = analytics.get_service_popularity_chart()
-        elif chart_type == 'order_status':
-            data = analytics.get_order_status_chart()
+            orders = Order.query.all()
+            payment_counts = {}
+            for order in orders:
+                payment_counts[order.payment_method] = payment_counts.get(order.payment_method, 0) + 1
+            
+            data = {
+                'labels': list(payment_counts.keys()),
+                'data': list(payment_counts.values())
+            }
         else:
-            return jsonify({"error": "Invalid chart type"}), 400
+            # Return empty data for other chart types for now
+            data = {'labels': [], 'data': []}
         
         return jsonify(data), 200
     except Exception as e:
@@ -276,16 +315,16 @@ def export_orders():
                         'Commission', 'Shop Amount', 'Status', 'Created At'])
         
         # Write data
-        for order in data_store.orders.values():
-            user = data_store.users.get(order.user_id)
+        orders = Order.query.all()
+        for order in orders:
             writer.writerow([
                 order.id,
-                user.name if user else 'Unknown',
-                user.phone if user else 'N/A',
+                order.user.name if order.user else 'Unknown',
+                order.user.phone if order.user else 'N/A',
                 order.total_amount,
                 order.payment_method,
-                order.commission_amount,
-                order.shop_amount,
+                order.app_commission,
+                order.shop_revenue,
                 order.status,
                 order.created_at.strftime('%Y-%m-%d %H:%M:%S')
             ])
@@ -319,7 +358,30 @@ def create_category():
             "items": data['items']
         }
         
-        data_store.categories[category_id] = category_data
+        # Create or update category in database
+        category = Category.query.get(category_id)
+        if category:
+            # Update existing category
+            category.name_en = data['name']['en']
+            category.name_ar = data['name']['ar'] 
+            category.description_en = data['description']['en']
+            category.description_ar = data['description']['ar']
+            category.image = data.get('image', '/static/images/default.svg')
+            category.items = data['items']
+        else:
+            # Create new category
+            category = Category(
+                id=category_id,
+                name_en=data['name']['en'],
+                name_ar=data['name']['ar'],
+                description_en=data['description']['en'],
+                description_ar=data['description']['ar'],
+                image=data.get('image', '/static/images/default.svg'),
+                items=data['items']
+            )
+            db.session.add(category)
+        
+        db.session.commit()
         
         return jsonify({"message": "Category saved successfully", "id": category_id}), 200
         

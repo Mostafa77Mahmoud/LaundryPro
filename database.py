@@ -1,9 +1,18 @@
 import uuid
 from datetime import datetime
 from typing import Dict, List, Any
+import os
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 from sqlalchemy import Column, String, Text, Float, Integer, DateTime, ForeignKey, JSON
-from sqlalchemy.orm import relationship
-from app import db
+from sqlalchemy.orm import relationship, DeclarativeBase
+from werkzeug.middleware.proxy_fix import ProxyFix
+
+class Base(DeclarativeBase):
+    pass
+
+db = SQLAlchemy(model_class=Base)
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -194,3 +203,41 @@ def init_default_categories():
         db.session.add(category)
     
     db.session.commit()
+
+def create_app():
+    # Create the app
+    app = Flask(__name__)
+    app.secret_key = os.environ.get("SESSION_SECRET", "your-secret-key-here")
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+    # Enable CORS for mobile app
+    CORS(app)
+
+    # Configure the database
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
+    }
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+    # Initialize the app with the extension
+    db.init_app(app)
+
+    # Upload configuration
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+    UPLOAD_FOLDER = 'static/uploads'
+    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+    # Ensure upload directory exists
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+    with app.app_context():
+        # Create all tables
+        db.create_all()
+        
+        # Initialize default categories if none exist
+        if Category.query.count() == 0:
+            init_default_categories()
+
+    return app

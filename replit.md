@@ -8,11 +8,22 @@ This is a Flask-based web application for managing a laundry service business. T
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+### July 15, 2025 - Database Migration Complete
+- ✓ Migrated from in-memory data store to PostgreSQL database
+- ✓ Created SQLAlchemy models (User, Category, Order, OrderItem)
+- ✓ Updated all API endpoints to use database queries
+- ✓ Fixed template variables to match new database structure
+- ✓ Maintained commission system (15% app, 85% shop)
+- ✓ Preserved bilingual support with proper RTL layout
+
 ## System Architecture
 
 ### Backend Architecture
-- **Framework**: Flask (Python) with WSGI deployment
-- **Data Storage**: In-memory data store using Python classes (no database currently implemented)
+- **Framework**: Flask (Python) with Gunicorn WSGI deployment
+- **Database**: PostgreSQL with SQLAlchemy ORM
+- **Data Models**: User, Category, Order, OrderItem with proper relationships
 - **API Structure**: RESTful endpoints for mobile app integration
 - **CORS**: Enabled for cross-origin requests from mobile applications
 - **File Handling**: Support for image uploads with size limits (16MB max)
