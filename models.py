@@ -4,6 +4,7 @@ from typing import Dict, List, Any
 from sqlalchemy import Column, String, Text, Float, Integer, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from app import db
+import config
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -78,8 +79,8 @@ class Order(db.Model):
     def calculate_totals(self):
         """Calculate order totals based on items"""
         self.total_amount = sum(item.quantity * item.unit_price for item in self.items)
-        self.app_commission = self.total_amount * 0.30  # 30% commission
-        self.shop_revenue = self.total_amount * 0.70   # 70% to shop
+        self.app_commission = self.total_amount * config.COMMISSION_RATE
+        self.shop_revenue = self.total_amount * config.SHOP_RATE
     
     def to_dict(self):
         return {
@@ -122,64 +123,7 @@ class OrderItem(db.Model):
 
 def init_default_categories():
     """Initialize default service categories with bilingual support"""
-    default_categories = [
-        {
-            "id": "carpet-cleaning",
-            "name_en": "Carpet Cleaning",
-            "name_ar": "تنظيف السجاد",
-            "description_en": "Professional carpet and rug cleaning services",
-            "description_ar": "خدمات تنظيف السجاد والبسط الاحترافية",
-            "image": "/static/images/carpet.jpg",
-            "items": [
-                {"name": {"en": "Small Rug (2x3)", "ar": "سجادة صغيرة (2×3)"}, "price": 50},
-                {"name": {"en": "Medium Rug (3x5)", "ar": "سجادة متوسطة (3×5)"}, "price": 80},
-                {"name": {"en": "Large Rug (5x8)", "ar": "سجادة كبيرة (5×8)"}, "price": 120},
-                {"name": {"en": "Persian Carpet", "ar": "سجادة فارسية"}, "price": 200},
-            ]
-        },
-        {
-            "id": "womens-clothing",
-            "name_en": "Women's Clothing",
-            "name_ar": "ملابس نسائية",
-            "description_en": "Delicate clothing care and cleaning",
-            "description_ar": "العناية بالملابس الحساسة والتنظيف",
-            "image": "/static/images/womens-clothing.jpg",
-            "items": [
-                {"name": {"en": "Dress", "ar": "فستان"}, "price": 25},
-                {"name": {"en": "Blouse", "ar": "بلوزة"}, "price": 15},
-                {"name": {"en": "Skirt", "ar": "تنورة"}, "price": 20},
-                {"name": {"en": "Evening Gown", "ar": "فستان سهرة"}, "price": 40},
-            ]
-        },
-        {
-            "id": "upholstery-cleaning",
-            "name_en": "Upholstery Cleaning",
-            "name_ar": "تنظيف المفروشات",
-            "description_en": "Furniture and upholstery deep cleaning",
-            "description_ar": "تنظيف عميق للأثاث والمفروشات",
-            "image": "/static/images/upholstery.jpg",
-            "items": [
-                {"name": {"en": "Single Chair", "ar": "كرسي مفرد"}, "price": 60},
-                {"name": {"en": "2-Seater Sofa", "ar": "أريكة مقعدين"}, "price": 120},
-                {"name": {"en": "3-Seater Sofa", "ar": "أريكة ثلاثة مقاعد"}, "price": 180},
-                {"name": {"en": "Ottoman", "ar": "مقعد عثماني"}, "price": 40},
-            ]
-        },
-        {
-            "id": "bedding-blankets",
-            "name_en": "Bedding & Blankets",
-            "name_ar": "أغطية السرير والبطانيات",
-            "description_en": "Bedding, comforters, and blanket cleaning",
-            "description_ar": "تنظيف أغطية السرير والبطانيات",
-            "image": "/static/images/bedding.jpg",
-            "items": [
-                {"name": {"en": "Bed Sheet Set", "ar": "طقم ملاءات السرير"}, "price": 30},
-                {"name": {"en": "Comforter", "ar": "لحاف"}, "price": 50},
-                {"name": {"en": "Blanket", "ar": "بطانية"}, "price": 40},
-                {"name": {"en": "Pillow", "ar": "وسادة"}, "price": 15},
-            ]
-        }
-    ]
+    default_categories = config.DEFAULT_CATEGORIES
     
     for cat_data in default_categories:
         category = Category(

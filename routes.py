@@ -8,6 +8,7 @@ from werkzeug.utils import secure_filename
 from app import app, db, admin_required
 from models import User, Order, Category, OrderItem
 from analytics import AnalyticsEngine
+import config
 
 # Initialize analytics engine - commented out for now
 # analytics = None
@@ -133,10 +134,15 @@ def create_order():
         if not user:
             return jsonify({"error": "User not found"}), 404
         
+        # Validate payment method
+        payment_method = data.get('payment_method', config.DEFAULT_PAYMENT_METHOD)
+        if payment_method not in config.SUPPORTED_PAYMENT_METHODS:
+            return jsonify({"error": f"Unsupported payment method. Supported: {config.SUPPORTED_PAYMENT_METHODS}"}), 400
+        
         # Create order
         order = Order(
             user_id=data['user_id'],
-            payment_method=data.get('payment_method', 'cash')
+            payment_method=payment_method
         )
         
         db.session.add(order)
@@ -158,8 +164,8 @@ def create_order():
         
         # Calculate commission and shop revenue
         order.total_amount = total_amount
-        order.app_commission = total_amount * 0.30  # 30% commission
-        order.shop_revenue = total_amount * 0.70   # 70% to shop
+        order.app_commission = total_amount * config.COMMISSION_RATE
+        order.shop_revenue = total_amount * config.SHOP_RATE
         
         db.session.commit()
         
@@ -173,7 +179,7 @@ def create_order():
         app.logger.error(f"Error creating order: {str(e)}")
         return jsonify({"error": "Failed to create order"}), 500
 
-@app.route('/api/orders/<user_id>', methods=['GET'])
+@app.route('/api/users/<user_id>/orders', methods=['GET'])
 def get_user_orders(user_id):
     """Get orders for a specific user"""
     try:
@@ -186,7 +192,7 @@ def get_user_orders(user_id):
         app.logger.error(f"Error getting user orders: {str(e)}")
         return jsonify({"error": "Failed to get orders"}), 500
 
-@app.route('/api/orders/<order_id>/status', methods=['PATCH'])
+@app.route('/api/orders/<order_id>/status', methods=['PUT'])
 def update_order_status(order_id):
     """Update order status"""
     try:
@@ -204,6 +210,7 @@ def update_order_status(order_id):
             return jsonify({"error": "Invalid status"}), 400
         
         order.update_status(data['status'])
+        db.session.commit()
         
         return jsonify({
             "message": "Order status updated successfully",
@@ -214,50 +221,54 @@ def update_order_status(order_id):
         app.logger.error(f"Error updating order status: {str(e)}")
         return jsonify({"error": "Failed to update order status"}), 500
 
-@app.route('/api/chat', methods=['POST'])
+@app.route('/api/chatbot', methods=['POST'])
 def chatbot():
     """Simple chatbot for price inquiries and order tracking"""
     try:
         data = request.get_json()
-        message = data.get('message', '').lower()
-        user_id = data.get('user_id')
         
-        response = {"message": "I'm sorry, I didn't understand that. You can ask about prices or track your orders."}
+        if not data or 'message' not in data:
+            return jsonify({"error": "Message is required"}), 400
         
-        # Price inquiries
-        if any(word in message for word in ['price', 'cost', 'how much', 'سعر']):
-            if 'carpet' in message or 'سجاد' in message:
-                response = {"message": "Carpet cleaning prices: Small Rug 40 SAR, Medium Carpet 70 SAR, Large Carpet 100 SAR, Persian Rug 150 SAR"}
-            elif 'clothes' in message or 'ملابس' in message:
-                response = {"message": "Women's clothing prices: Dress 25 SAR, Blouse 15 SAR, Skirt 20 SAR, Formal Suit 50 SAR"}
-            elif 'upholstery' in message or 'انتريه' in message:
-                response = {"message": "Upholstery cleaning prices: Single Chair 30 SAR, 2-Seater Sofa 80 SAR, 3-Seater Sofa 120 SAR"}
-            elif 'bedding' in message or 'بطانية' in message:
-                response = {"message": "Bedding prices: Single Blanket 35 SAR, Double Blanket 50 SAR, Comforter 60 SAR, Pillow 10 SAR"}
-            else:
-                response = {"message": "We offer carpet cleaning, women's clothing, upholstery cleaning, and bedding services. What would you like to know about?"}
+        message = data['message'].lower()
         
-        # Order tracking
-        elif any(word in message for word in ['order', 'track', 'where', 'status', 'طلب']):
-            if user_id:
-                user_orders = [order for order in data_store.orders.values() if order.user_id == user_id]
-                if user_orders:
-                    latest_order = max(user_orders, key=lambda x: x.created_at)
-                    response = {"message": f"Your latest order (#{latest_order.id[:8]}) is currently: {latest_order.status}"}
-                else:
-                    response = {"message": "You don't have any orders yet. Would you like to place one?"}
-            else:
-                response = {"message": "Please provide your user ID to track your orders."}
+        # Simple keyword-based responses
+        if 'price' in message or 'cost' in message or 'سعر' in message:
+            categories = Category.query.all()
+            response = "Here are our service prices:\n\n"
+            for category in categories:
+                response += f"• {category.name_en} ({category.name_ar}):\n"
+                if category.items:
+                    for item in category.items:
+                        response += f"  - {item['name']['en']}: {item['price']} {config.CURRENCY_SYMBOL}\n"
+                response += "\n"
+            
+            return jsonify({
+                "response": response,
+                "type": "price_list"
+            }), 200
         
-        # New order request
-        elif any(word in message for word in ['wash', 'clean', 'order', 'want', 'need', 'غسيل']):
-            response = {"message": "I'd be happy to help you place an order! Please use the mobile app to select your items and quantities."}
+        elif 'order' in message or 'track' in message or 'طلب' in message:
+            return jsonify({
+                "response": "To track your order, please provide your order ID or phone number used during order placement.",
+                "type": "order_tracking"
+            }), 200
         
-        return jsonify(response), 200
+        elif 'payment' in message or 'دفع' in message:
+            return jsonify({
+                "response": f"We accept the following payment methods: {', '.join(config.SUPPORTED_PAYMENT_METHODS)}",
+                "type": "payment_info"
+            }), 200
+        
+        else:
+            return jsonify({
+                "response": "Hello! I can help you with:\n• Service prices\n• Order tracking\n• Payment methods\n\nWhat would you like to know?",
+                "type": "general"
+            }), 200
         
     except Exception as e:
         app.logger.error(f"Error in chatbot: {str(e)}")
-        return jsonify({"error": "Chatbot service unavailable"}), 500
+        return jsonify({"error": "Failed to process message"}), 500
 
 @app.route('/api/analytics/summary')
 def analytics_summary():
@@ -519,7 +530,7 @@ def get_orders_report():
                     for item in order.items
                 ],
                 "subtotal": order.total_amount,
-                "commission_rate": 0.30,
+                "commission_rate": config.COMMISSION_RATE,
                 "commission_amount": order.app_commission,
                 "shop_revenue": order.shop_revenue
             }
@@ -568,7 +579,7 @@ def get_order_details(order_id):
                 for item in order.items
             ],
             "subtotal": order.total_amount,
-            "commission_rate": 0.30,
+            "commission_rate": config.COMMISSION_RATE,
             "commission_amount": order.app_commission,
             "app_profit": order.app_commission,
             "shop_revenue": order.shop_revenue
@@ -606,12 +617,15 @@ def export_detailed_report():
         writer = csv.writer(output)
         
         # Write headers based on language
+        commission_percent = int(config.COMMISSION_RATE * 100)
+        shop_percent = int(config.SHOP_RATE * 100)
+        
         if lang == 'ar':
             headers = ['رقم الطلب', 'اسم العميل', 'رقم الهاتف', 'التاريخ', 'طريقة الدفع', 
-                      'المبلغ الإجمالي', 'العمولة (30%)', 'ربح المتجر (70%)', 'الحالة']
+                      'المبلغ الإجمالي', f'العمولة ({commission_percent}%)', f'ربح المتجر ({shop_percent}%)', 'الحالة']
         else:
             headers = ['Order ID', 'Customer Name', 'Phone', 'Date', 'Payment Method', 
-                      'Total Amount', 'Commission (30%)', 'Shop Revenue (70%)', 'Status']
+                      'Total Amount', f'Commission ({commission_percent}%)', f'Shop Revenue ({shop_percent}%)', 'Status']
         
         writer.writerow(headers)
         
@@ -682,3 +696,134 @@ def upload_image():
     except Exception as e:
         app.logger.error(f"Error uploading image: {str(e)}")
         return jsonify({"error": "Failed to upload image"}), 500
+
+# Enhanced Financial Reporting Endpoints
+@app.route('/api/reports/financial-summary')
+def financial_summary():
+    """Get comprehensive financial summary with detailed breakdowns"""
+    try:
+        # Get date filters
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        period = request.args.get('period', 'all')  # daily, weekly, monthly, all
+        
+        query = Order.query
+        
+        if start_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+            query = query.filter(Order.created_at >= start_date)
+        
+        if end_date:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+            end_date = end_date + timedelta(days=1)
+            query = query.filter(Order.created_at < end_date)
+        
+        orders = query.all()
+        
+        # Calculate totals
+        total_orders = len(orders)
+        total_revenue = sum(order.total_amount or 0 for order in orders)
+        total_commission = sum(order.app_commission or 0 for order in orders)
+        total_shop_revenue = sum(order.shop_revenue or 0 for order in orders)
+        
+        # Payment method breakdown
+        payment_methods = {}
+        for order in orders:
+            method = order.payment_method
+            if method not in payment_methods:
+                payment_methods[method] = {
+                    'count': 0,
+                    'revenue': 0,
+                    'commission': 0,
+                    'shop_revenue': 0
+                }
+            payment_methods[method]['count'] += 1
+            payment_methods[method]['revenue'] += order.total_amount or 0
+            payment_methods[method]['commission'] += order.app_commission or 0
+            payment_methods[method]['shop_revenue'] += order.shop_revenue or 0
+        
+        # Category/Service breakdown
+        service_breakdown = {}
+        for order in orders:
+            for item in order.items:
+                service_name = item.item_name_en
+                if service_name not in service_breakdown:
+                    service_breakdown[service_name] = {
+                        'count': 0,
+                        'quantity': 0,
+                        'revenue': 0,
+                        'average_price': 0
+                    }
+                service_breakdown[service_name]['count'] += 1
+                service_breakdown[service_name]['quantity'] += item.quantity
+                service_breakdown[service_name]['revenue'] += item.quantity * item.unit_price
+                service_breakdown[service_name]['average_price'] = service_breakdown[service_name]['revenue'] / service_breakdown[service_name]['quantity']
+        
+        # Order status breakdown
+        status_breakdown = {}
+        for order in orders:
+            status = order.status
+            if status not in status_breakdown:
+                status_breakdown[status] = {
+                    'count': 0,
+                    'revenue': 0
+                }
+            status_breakdown[status]['count'] += 1
+            status_breakdown[status]['revenue'] += order.total_amount or 0
+        
+        # Period analysis
+        period_analysis = {}
+        if period == 'daily':
+            for order in orders:
+                date_key = order.created_at.date().isoformat()
+                if date_key not in period_analysis:
+                    period_analysis[date_key] = {
+                        'orders': 0,
+                        'revenue': 0,
+                        'commission': 0,
+                        'shop_revenue': 0
+                    }
+                period_analysis[date_key]['orders'] += 1
+                period_analysis[date_key]['revenue'] += order.total_amount or 0
+                period_analysis[date_key]['commission'] += order.app_commission or 0
+                period_analysis[date_key]['shop_revenue'] += order.shop_revenue or 0
+        
+        return jsonify({
+            'summary': {
+                'total_orders': total_orders,
+                'total_revenue': round(total_revenue, 2),
+                'total_commission': round(total_commission, 2),
+                'total_shop_revenue': round(total_shop_revenue, 2),
+                'commission_rate': config.COMMISSION_RATE,
+                'shop_rate': config.SHOP_RATE,
+                'currency': config.CURRENCY_SYMBOL,
+                'supported_payment_methods': config.SUPPORTED_PAYMENT_METHODS
+            },
+            'payment_methods': payment_methods,
+            'service_breakdown': service_breakdown,
+            'status_breakdown': status_breakdown,
+            'period_analysis': period_analysis
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error getting financial summary: {str(e)}")
+        return jsonify({"error": "Failed to get financial summary"}), 500
+
+@app.route('/api/reports/config')
+def get_system_config():
+    """Get system configuration for reports"""
+    try:
+        return jsonify({
+            'commission_rate': config.COMMISSION_RATE,
+            'shop_rate': config.SHOP_RATE,
+            'currency_symbol': config.CURRENCY_SYMBOL,
+            'currency_code': config.CURRENCY_CODE,
+            'supported_payment_methods': config.SUPPORTED_PAYMENT_METHODS,
+            'default_payment_method': config.DEFAULT_PAYMENT_METHOD,
+            'system_name': config.SYSTEM_NAME,
+            'system_name_en': config.SYSTEM_NAME_EN,
+            'order_statuses': config.ORDER_STATUSES
+        }), 200
+    except Exception as e:
+        app.logger.error(f"Error getting system config: {str(e)}")
+        return jsonify({"error": "Failed to get system config"}), 500
