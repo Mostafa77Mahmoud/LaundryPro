@@ -1,6 +1,7 @@
 import os
 import csv
 import io
+import uuid
 from datetime import datetime, timedelta
 from flask import render_template, request, jsonify, redirect, url_for, send_file, flash
 from werkzeug.utils import secure_filename
@@ -39,7 +40,9 @@ def orders_page():
 @app.route('/categories')
 def categories_page():
     """Categories management page"""
-    categories = list(data_store.categories.values())
+    categories = []
+    for category_data in data_store.categories.values():
+        categories.append(category_data)
     return render_template('categories.html', categories=categories)
 
 @app.route('/reports')

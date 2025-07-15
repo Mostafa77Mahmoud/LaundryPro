@@ -83,7 +83,31 @@ class Dashboard {
                 totalOrders: 'Total Orders',
                 totalRevenue: 'Total Revenue',
                 appCommission: 'App Commission',
-                shopRevenue: 'Shop Revenue'
+                shopRevenue: 'Shop Revenue',
+                addCategory: 'Add Category',
+                editCategory: 'Edit Category',
+                deleteCategory: 'Delete Category',
+                changeImage: 'Change Image',
+                servicesAndPrices: 'Services & Prices',
+                noCategoriesFound: 'No Categories Found',
+                startByAdding: 'Start by adding your first service category.',
+                search: 'Search...',
+                filter: 'Filter',
+                all: 'All',
+                pending: 'Pending',
+                inProgress: 'In Progress',
+                completed: 'Completed',
+                cancelled: 'Cancelled',
+                orderManagement: 'Order Management',
+                allOrders: 'All Orders',
+                filterByStatus: 'Filter by Status',
+                filterByPayment: 'Filter by Payment',
+                searchOrders: 'Search Orders',
+                filterByDate: 'Filter by Date',
+                allStatuses: 'All Statuses',
+                allPaymentMethods: 'All Payment Methods',
+                orderIdOrCustomer: 'Order ID or Customer',
+                refresh: 'Refresh'
             },
             ar: {
                 dashboard: 'لوحة التحكم',
@@ -94,7 +118,31 @@ class Dashboard {
                 totalOrders: 'إجمالي الطلبات',
                 totalRevenue: 'إجمالي الإيرادات',
                 appCommission: 'عمولة التطبيق',
-                shopRevenue: 'إيرادات المتجر'
+                shopRevenue: 'إيرادات المتجر',
+                addCategory: 'إضافة فئة',
+                editCategory: 'تحرير الفئة',
+                deleteCategory: 'حذف الفئة',
+                changeImage: 'تغيير الصورة',
+                servicesAndPrices: 'الخدمات والأسعار',
+                noCategoriesFound: 'لم يتم العثور على فئات',
+                startByAdding: 'ابدأ بإضافة فئة الخدمة الأولى.',
+                search: 'بحث...',
+                filter: 'تصفية',
+                all: 'الكل',
+                pending: 'قيد الانتظار',
+                inProgress: 'قيد التنفيذ',
+                completed: 'مكتمل',
+                cancelled: 'ملغي',
+                orderManagement: 'إدارة الطلبات',
+                allOrders: 'جميع الطلبات',
+                filterByStatus: 'تصفية حسب الحالة',
+                filterByPayment: 'تصفية حسب الدفع',
+                searchOrders: 'البحث في الطلبات',
+                filterByDate: 'تصفية حسب التاريخ',
+                allStatuses: 'جميع الحالات',
+                allPaymentMethods: 'جميع طرق الدفع',
+                orderIdOrCustomer: 'رقم الطلب أو العميل',
+                refresh: 'تحديث'
             }
         };
 
@@ -115,6 +163,44 @@ class Dashboard {
             if (metricKeys[index]) {
                 title.textContent = translations[lang][metricKeys[index]];
             }
+        });
+
+        // Update category content based on language
+        if (lang === 'ar') {
+            // Show Arabic content, hide English
+            document.querySelectorAll('.category-name-en, .category-desc-en, .item-name-en').forEach(el => {
+                el.classList.add('d-none');
+            });
+            document.querySelectorAll('.category-name-ar, .category-desc-ar, .item-name-ar').forEach(el => {
+                el.classList.remove('d-none');
+            });
+        } else {
+            // Show English content, hide Arabic
+            document.querySelectorAll('.category-name-ar, .category-desc-ar, .item-name-ar').forEach(el => {
+                el.classList.add('d-none');
+            });
+            document.querySelectorAll('.category-name-en, .category-desc-en, .item-name-en').forEach(el => {
+                el.classList.remove('d-none');
+            });
+        }
+
+        // Update button texts and UI elements
+        const uiElements = {
+            '.btn-add-category': translations[lang].addCategory,
+            '[data-translate="services-prices"]': translations[lang].servicesAndPrices,
+            '[data-translate="no-categories"]': translations[lang].noCategoriesFound,
+            '[data-translate="start-adding"]': translations[lang].startByAdding,
+            'input[placeholder*="Search"], input[placeholder*="بحث"]': translations[lang].search,
+        };
+
+        Object.entries(uiElements).forEach(([selector, text]) => {
+            document.querySelectorAll(selector).forEach(el => {
+                if (el.tagName === 'INPUT') {
+                    el.placeholder = text;
+                } else {
+                    el.textContent = text;
+                }
+            });
         });
     }
 
@@ -300,37 +386,8 @@ class RealTimeUpdates {
     }
 
     setupWebSocket() {
-        // Check if WebSocket is available
-        if (typeof WebSocket !== 'undefined') {
-            try {
-                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                this.ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
-                
-                this.ws.onopen = () => {
-                    console.log('WebSocket connected');
-                };
-                
-                this.ws.onmessage = (event) => {
-                    const data = JSON.parse(event.data);
-                    this.handleRealtimeUpdate(data);
-                };
-                
-                this.ws.onclose = () => {
-                    console.log('WebSocket disconnected');
-                    // Attempt to reconnect after 5 seconds
-                    setTimeout(() => this.setupWebSocket(), 5000);
-                };
-                
-                this.ws.onerror = (error) => {
-                    console.error('WebSocket error:', error);
-                };
-            } catch (error) {
-                console.log('WebSocket not available, using polling');
-                this.fallbackToPolling();
-            }
-        } else {
-            this.fallbackToPolling();
-        }
+        // Use polling instead of WebSocket to avoid connection errors
+        this.fallbackToPolling();
     }
 
     fallbackToPolling() {

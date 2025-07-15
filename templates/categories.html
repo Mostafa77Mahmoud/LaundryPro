@@ -19,25 +19,25 @@
 <!-- Categories Grid -->
 <div class="row" id="categoriesGrid">
     {% for category in categories %}
-    <div class="col-lg-6 col-xl-4 mb-4" data-category-id="{{ category.id }}">
+    <div class="col-lg-6 col-xl-4 mb-4" data-category-id="{{ category['id'] }}">
         <div class="card shadow h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="m-0 font-weight-bold text-primary">
-                    {{ category.name.en }} / {{ category.name.ar }}
+                    <span class="category-name-en">{{ category['name']['en'] }}</span> / <span class="category-name-ar">{{ category['name']['ar'] }}</span>
                 </h6>
                 <div class="dropdown">
                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         <i class="fas fa-cog"></i>
                     </button>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#" onclick="editCategory('{{ category.id }}')">
+                        <li><a class="dropdown-item" href="#" onclick="editCategory('{{ category['id'] }}')">
                             <i class="fas fa-edit me-1"></i>Edit
                         </a></li>
-                        <li><a class="dropdown-item" href="#" onclick="changeImage('{{ category.id }}')">
+                        <li><a class="dropdown-item" href="#" onclick="changeImage('{{ category['id'] }}')">
                             <i class="fas fa-image me-1"></i>Change Image
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="#" onclick="deleteCategory('{{ category.id }}')">
+                        <li><a class="dropdown-item text-danger" href="#" onclick="deleteCategory('{{ category['id'] }}')">
                             <i class="fas fa-trash me-1"></i>Delete
                         </a></li>
                     </ul>
@@ -45,19 +45,23 @@
             </div>
             <div class="card-body">
                 <div class="text-center mb-3">
-                    <img src="{{ category.image }}" alt="{{ category.name.en }}" 
+                    <img src="{{ category['image'] }}" alt="{{ category['name']['en'] }}" 
                          class="category-image img-fluid" style="max-height: 100px;">
                 </div>
-                <p class="text-muted small">{{ category.description.en }}</p>
+                <p class="text-muted small">
+                    <span class="category-desc-en">{{ category['description']['en'] }}</span>
+                    <span class="category-desc-ar d-none">{{ category['description']['ar'] }}</span>
+                </p>
                 
-                <h6 class="mb-2">Services & Prices:</h6>
+                <h6 class="mb-2" data-translate="services-prices">Services & Prices:</h6>
                 <div class="table-responsive">
                     <table class="table table-sm">
                         <tbody>
-                            {% for item in category.items %}
+                            {% for item in category['items'] %}
                             <tr>
-                                <td>{{ item.name.en }}</td>
-                                <td class="text-end">{{ item.price }} SAR</td>
+                                <td class="item-name-en">{{ item['name']['en'] }}</td>
+                                <td class="item-name-ar d-none">{{ item['name']['ar'] }}</td>
+                                <td class="text-end">{{ item['price'] }} SAR</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -71,11 +75,11 @@
         <div class="card">
             <div class="card-body text-center">
                 <i class="fas fa-tags fa-3x text-muted mb-3"></i>
-                <h5>No Categories Found</h5>
-                <p class="text-muted">Start by adding your first service category.</p>
-                <button class="btn btn-primary" onclick="showAddCategoryModal()">
+                <h5 data-translate="no-categories">No Categories Found</h5>
+                <p class="text-muted" data-translate="start-adding">Start by adding your first service category.</p>
+                <button class="btn btn-primary btn-add-category" onclick="showAddCategoryModal()">
                     <i class="fas fa-plus me-1"></i>
-                    Add Category
+                    <span data-translate="add-category">Add Category</span>
                 </button>
             </div>
         </div>
