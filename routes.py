@@ -1,5 +1,5 @@
 import os
-import csv
+import defusedcsv as csv
 import io
 import uuid
 from datetime import datetime, timedelta
