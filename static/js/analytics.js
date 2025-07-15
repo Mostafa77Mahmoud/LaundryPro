@@ -225,23 +225,44 @@ class AnalyticsDashboard {
         const container = document.getElementById('topServicesList');
         if (!container) return;
 
-        let html = '';
+        // Clear container safely
+        while (container.firstChild) {
+            container.removeChild(container.firstChild);
+        }
+
+        if (!data.labels || data.labels.length === 0) {
+            const noDataMsg = document.createElement('p');
+            noDataMsg.className = 'text-muted';
+            noDataMsg.textContent = 'No service data available';
+            container.appendChild(noDataMsg);
+            return;
+        }
+
         data.labels.slice(0, 5).forEach((service, index) => {
             const quantity = data.datasets[0].data[index];
             const revenue = data.revenue_data ? data.revenue_data[index] : 0;
             
-            html += `
-                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                    <div>
-                        <strong>${service}</strong>
-                        <small class="text-muted d-block">${revenue.toFixed(2)} LE revenue</small>
-                    </div>
-                    <span class="badge bg-primary">${quantity}</span>
-                </div>
-            `;
+            const serviceItem = document.createElement('div');
+            serviceItem.className = 'd-flex justify-content-between align-items-center py-2 border-bottom';
+            
+            const serviceInfo = document.createElement('div');
+            const serviceName = document.createElement('strong');
+            serviceName.textContent = service;
+            const serviceRevenue = document.createElement('small');
+            serviceRevenue.className = 'text-muted d-block';
+            serviceRevenue.textContent = `${revenue.toFixed(2)} LE revenue`;
+            
+            serviceInfo.appendChild(serviceName);
+            serviceInfo.appendChild(serviceRevenue);
+            
+            const quantityBadge = document.createElement('span');
+            quantityBadge.className = 'badge bg-primary';
+            quantityBadge.textContent = quantity;
+            
+            serviceItem.appendChild(serviceInfo);
+            serviceItem.appendChild(quantityBadge);
+            container.appendChild(serviceItem);
         });
-
-        container.innerHTML = html || '<p class="text-muted">No service data available</p>';
     }
 
     async loadCommissionChart() {
@@ -412,6 +433,11 @@ class AnalyticsDashboard {
         const container = document.getElementById('kpiCards');
         if (!container) return;
 
+        // Clear container safely
+        while (container.firstChild) {
+            container.removeChild(container.firstChild);
+        }
+
         // Calculate additional KPIs
         const avgOrderValue = data.total_orders > 0 ? data.total_revenue / data.total_orders : 0;
         const commissionRate = data.total_revenue > 0 ? (data.total_commission / data.total_revenue) * 100 : 15;
@@ -444,32 +470,46 @@ class AnalyticsDashboard {
             }
         ];
 
-        let html = '';
         kpis.forEach(kpi => {
-            html += `
-                <div class="col-md-3 mb-3">
-                    <div class="card border-left-${kpi.color} shadow h-100 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-${kpi.color} text-uppercase mb-1">
-                                        ${kpi.title}
-                                    </div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                        ${kpi.value}
-                                    </div>
-                                </div>
-                                <div class="col-auto">
-                                    <i class="${kpi.icon} fa-2x text-gray-300"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
+            const colDiv = document.createElement('div');
+            colDiv.className = 'col-md-3 mb-3';
+            
+            const cardDiv = document.createElement('div');
+            cardDiv.className = `card border-left-${kpi.color} shadow h-100 py-2`;
+            
+            const cardBody = document.createElement('div');
+            cardBody.className = 'card-body';
+            
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'row no-gutters align-items-center';
+            
+            const colMr2 = document.createElement('div');
+            colMr2.className = 'col mr-2';
+            
+            const titleDiv = document.createElement('div');
+            titleDiv.className = `text-xs font-weight-bold text-${kpi.color} text-uppercase mb-1`;
+            titleDiv.textContent = kpi.title;
+            
+            const valueDiv = document.createElement('div');
+            valueDiv.className = 'h5 mb-0 font-weight-bold text-gray-800';
+            valueDiv.textContent = kpi.value;
+            
+            const colAuto = document.createElement('div');
+            colAuto.className = 'col-auto';
+            
+            const icon = document.createElement('i');
+            icon.className = `${kpi.icon} fa-2x text-gray-300`;
+            
+            colMr2.appendChild(titleDiv);
+            colMr2.appendChild(valueDiv);
+            colAuto.appendChild(icon);
+            rowDiv.appendChild(colMr2);
+            rowDiv.appendChild(colAuto);
+            cardBody.appendChild(rowDiv);
+            cardDiv.appendChild(cardBody);
+            colDiv.appendChild(cardDiv);
+            container.appendChild(colDiv);
         });
-
-        container.innerHTML = html;
     }
 
     // Utility Functions
@@ -486,17 +526,39 @@ class AnalyticsDashboard {
         const canvas = document.getElementById(chartId);
         if (canvas) {
             const container = canvas.parentElement;
-            container.innerHTML = `
-                <div class="d-flex align-items-center justify-content-center h-100">
-                    <div class="text-center text-muted">
-                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
-                        <p>${message}</p>
-                        <button class="btn btn-outline-primary btn-sm" onclick="location.reload()">
-                            <i class="fas fa-sync-alt me-1"></i>Retry
-                        </button>
-                    </div>
-                </div>
-            `;
+            
+            // Clear container safely
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
+            
+            const errorContainer = document.createElement('div');
+            errorContainer.className = 'd-flex align-items-center justify-content-center h-100';
+            
+            const errorContent = document.createElement('div');
+            errorContent.className = 'text-center text-muted';
+            
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-exclamation-triangle fa-3x mb-3';
+            
+            const messageP = document.createElement('p');
+            messageP.textContent = message;
+            
+            const retryBtn = document.createElement('button');
+            retryBtn.className = 'btn btn-outline-primary btn-sm';
+            retryBtn.onclick = () => location.reload();
+            
+            const retryIcon = document.createElement('i');
+            retryIcon.className = 'fas fa-sync-alt me-1';
+            
+            retryBtn.appendChild(retryIcon);
+            retryBtn.appendChild(document.createTextNode('Retry'));
+            
+            errorContent.appendChild(icon);
+            errorContent.appendChild(messageP);
+            errorContent.appendChild(retryBtn);
+            errorContainer.appendChild(errorContent);
+            container.appendChild(errorContainer);
         }
     }
 
@@ -512,11 +574,20 @@ class AnalyticsDashboard {
         const toast = document.createElement('div');
         toast.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show position-fixed`;
         toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-        toast.innerHTML = `
-            <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} me-2"></i>
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
+        
+        const icon = document.createElement('i');
+        icon.className = `fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} me-2`;
+        
+        const messageText = document.createTextNode(message);
+        
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'btn-close';
+        closeBtn.setAttribute('data-bs-dismiss', 'alert');
+        
+        toast.appendChild(icon);
+        toast.appendChild(messageText);
+        toast.appendChild(closeBtn);
         
         document.body.appendChild(toast);
         

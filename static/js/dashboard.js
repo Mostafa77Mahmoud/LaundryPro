@@ -146,13 +146,25 @@ class Dashboard {
             }
         };
 
-        // Update navigation labels
+        // Update navigation labels safely
         const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
         navLinks.forEach((link, index) => {
             const keys = ['dashboard', 'orders', 'categories', 'analytics', 'reports'];
-            if (keys[index]) {
-                const iconHtml = link.querySelector('i').outerHTML;
-                link.innerHTML = iconHtml + ' ' + translations[lang][keys[index]];
+            if (keys[index] && translations[lang][keys[index]]) {
+                const icon = link.querySelector('i');
+                const textNode = link.childNodes.find(node => node.nodeType === Node.TEXT_NODE);
+                if (icon && textNode) {
+                    textNode.textContent = ' ' + translations[lang][keys[index]];
+                } else if (icon) {
+                    // Clear all text content and add new text
+                    const childNodes = Array.from(link.childNodes);
+                    childNodes.forEach(child => {
+                        if (child.nodeType === Node.TEXT_NODE) {
+                            child.remove();
+                        }
+                    });
+                    link.appendChild(document.createTextNode(' ' + translations[lang][keys[index]]));
+                }
             }
         });
 
@@ -325,15 +337,24 @@ class Dashboard {
     }
 
     showToast(message, type = 'info') {
-        // Create toast notification
+        // Create toast notification safely
         const toast = document.createElement('div');
         toast.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show position-fixed`;
         toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-        toast.innerHTML = `
-            <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} me-2"></i>
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
+        
+        const icon = document.createElement('i');
+        icon.className = `fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} me-2`;
+        
+        const messageText = document.createTextNode(message);
+        
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'btn-close';
+        closeBtn.setAttribute('data-bs-dismiss', 'alert');
+        
+        toast.appendChild(icon);
+        toast.appendChild(messageText);
+        toast.appendChild(closeBtn);
         
         document.body.appendChild(toast);
         

@@ -1,0 +1,97 @@
+Detected user input into a generated CSV file using the built-in `csv` module. If user data is used to generate the data in this file, it is possible that an attacker could inject a formula when the CSV is imported into a spreadsheet application that runs an attacker script, which could steal data from the importing user or, at worst, install malware on the user's computer. `defusedcsv` is a drop-in replacement with the same API that will attempt to mitigate formula injection attempts. You can use `defusedcsv` instead of `csv` to safely generate CSVs.
+routes.py
+            writer.writerow([
+                order.id,
+                order.user.name if order.user else 'Unknown',
+                order.user.phone if order.user else 'N/A',
+                order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                order.payment_method,
+                f"{order.total_amount:.2f} LE",
+                f"{order.app_commission:.2f} LE",
+                f"{order.shop_revenue:.2f} LE",
+                order.status
+            ])
+Detected potential vulnerability in static/js/analytics.js
+User controlled data in methods like `innerHTML`, `outerHTML` or `document.write` is an anti-pattern that can lead to XSS vulnerabilities
+static/js/analytics.js
+        container.innerHTML = html || '<p class="text-muted">No service data available</p>';
+Detected potential vulnerability in static/js/analytics.js
+User controlled data in a `container.innerHTML` is an anti-pattern that can lead to XSS vulnerabilities
+static/js/analytics.js
+        container.innerHTML = html || '<p class="text-muted">No service data available</p>';
+Detected potential vulnerability in static/js/analytics.js
+User controlled data in methods like `innerHTML`, `outerHTML` or `document.write` is an anti-pattern that can lead to XSS vulnerabilities
+static/js/analytics.js
+        container.innerHTML = html;
+Detected potential vulnerability in static/js/analytics.js
+User controlled data in a `container.innerHTML` is an anti-pattern that can lead to XSS vulnerabilities
+static/js/analytics.js
+        container.innerHTML = html;
+Detected potential vulnerability in static/js/analytics.js
+User controlled data in methods like `innerHTML`, `outerHTML` or `document.write` is an anti-pattern that can lead to XSS vulnerabilities
+static/js/analytics.js
+            container.innerHTML = `
+                <div class="d-flex align-items-center justify-content-center h-100">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                        <p>${message}</p>
+                        <button class="btn btn-outline-primary btn-sm" onclick="location.reload()">
+                            <i class="fas fa-sync-alt me-1"></i>Retry
+                        </button>
+                    </div>
+                </div>
+            `;
+Detected potential vulnerability in static/js/analytics.js
+User controlled data in a `container.innerHTML` is an anti-pattern that can lead to XSS vulnerabilities
+static/js/analytics.js
+            container.innerHTML = `
+                <div class="d-flex align-items-center justify-content-center h-100">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                        <p>${message}</p>
+                        <button class="btn btn-outline-primary btn-sm" onclick="location.reload()">
+                            <i class="fas fa-sync-alt me-1"></i>Retry
+                        </button>
+                    </div>
+                </div>
+            `;
+Detected potential vulnerability in static/js/analytics.js
+User controlled data in methods like `innerHTML`, `outerHTML` or `document.write` is an anti-pattern that can lead to XSS vulnerabilities
+static/js/analytics.js
+        toast.innerHTML = `
+            <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+Detected potential vulnerability in static/js/analytics.js
+User controlled data in a `toast.innerHTML` is an anti-pattern that can lead to XSS vulnerabilities
+static/js/analytics.js
+        toast.innerHTML = `
+            <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+Detected potential vulnerability in static/js/dashboard.js
+User controlled data in methods like `innerHTML`, `outerHTML` or `document.write` is an anti-pattern that can lead to XSS vulnerabilities
+static/js/dashboard.js
+                link.innerHTML = iconHtml + ' ' + translations[lang][keys[index]];
+Detected potential vulnerability in static/js/dashboard.js
+User controlled data in a `link.innerHTML` is an anti-pattern that can lead to XSS vulnerabilities
+static/js/dashboard.js
+                link.innerHTML = iconHtml + ' ' + translations[lang][keys[index]];
+Detected potential vulnerability in static/js/dashboard.js
+User controlled data in methods like `innerHTML`, `outerHTML` or `document.write` is an anti-pattern that can lead to XSS vulnerabilities
+static/js/dashboard.js
+        toast.innerHTML = `
+            <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+Detected potential vulnerability in static/js/dashboard.js
+User controlled data in a `toast.innerHTML` is an anti-pattern that can lead to XSS vulnerabilities
+static/js/dashboard.js
+        toast.innerHTML = `
+            <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;

@@ -221,54 +221,359 @@ def update_order_status(order_id):
         app.logger.error(f"Error updating order status: {str(e)}")
         return jsonify({"error": "Failed to update order status"}), 500
 
+import re
+
 @app.route('/api/chatbot', methods=['POST'])
 def chatbot():
-    """Simple chatbot for price inquiries and order tracking"""
+    """Enhanced intelligent chatbot for price inquiries, calculations, and order assistance"""
     try:
         data = request.get_json()
         
         if not data or 'message' not in data:
             return jsonify({"error": "Message is required"}), 400
         
-        message = data['message'].lower()
+        message = data['message'].lower().strip()
+        user_id = data.get('user_id')
         
-        # Simple keyword-based responses
-        if 'price' in message or 'cost' in message or 'سعر' in message:
-            categories = Category.query.all()
-            response = "Here are our service prices:\n\n"
-            for category in categories:
-                response += f"• {category.name_en} ({category.name_ar}):\n"
-                if category.items:
-                    for item in category.items:
-                        response += f"  - {item['name']['en']}: {item['price']} {config.CURRENCY_SYMBOL}\n"
-                response += "\n"
-            
-            return jsonify({
-                "response": response,
-                "type": "price_list"
-            }), 200
+        # Enhanced chatbot response logic
+        response_data = process_chatbot_message(message, user_id)
         
-        elif 'order' in message or 'track' in message or 'طلب' in message:
-            return jsonify({
-                "response": "To track your order, please provide your order ID or phone number used during order placement.",
-                "type": "order_tracking"
-            }), 200
-        
-        elif 'payment' in message or 'دفع' in message:
-            return jsonify({
-                "response": f"We accept the following payment methods: {', '.join(config.SUPPORTED_PAYMENT_METHODS)}",
-                "type": "payment_info"
-            }), 200
-        
-        else:
-            return jsonify({
-                "response": "Hello! I can help you with:\n• Service prices\n• Order tracking\n• Payment methods\n\nWhat would you like to know?",
-                "type": "general"
-            }), 200
+        return jsonify(response_data), 200
         
     except Exception as e:
         app.logger.error(f"Error in chatbot: {str(e)}")
         return jsonify({"error": "Failed to process message"}), 500
+
+def process_chatbot_message(message, user_id=None):
+    """Process chatbot message with enhanced capabilities"""
+    
+    # Price calculation patterns
+    calc_patterns = [
+        r'calculate|calc|compute|total|sum|مجموع|حساب|احسب',
+        r'how much|كم|سعر|تكلفة',
+        r'(\d+)\s*(carpet|rug|سجاد|سجادة)',
+        r'(\d+)\s*(shirt|dress|قميص|فستان|ملابس)',
+        r'(\d+)\s*(sofa|chair|كنب|كرسي|أثاث)'
+    ]
+    
+    # Check for calculation requests
+    if any(re.search(pattern, message) for pattern in calc_patterns):
+        return handle_price_calculation(message)
+    
+    # Order tracking with ID extraction
+    order_id_match = re.search(r'([a-f0-9-]{36})|order\s+(\w+)', message)
+    if ('track' in message or 'طلب' in message or 'order' in message) and order_id_match:
+        order_id = order_id_match.group(1) or order_id_match.group(2)
+        return handle_order_tracking(order_id, user_id)
+    
+    # Phone number extraction for order lookup
+    phone_match = re.search(r'(\+?\d{10,15})', message)
+    if ('track' in message or 'order' in message) and phone_match:
+        phone = phone_match.group(1)
+        return handle_phone_order_lookup(phone)
+    
+    # Service recommendations
+    if 'recommend' in message or 'suggest' in message or 'اقترح' in message or 'أنصح' in message:
+        return handle_service_recommendations(message)
+    
+    # Price inquiries
+    if 'price' in message or 'cost' in message or 'سعر' in message or 'تكلفة' in message:
+        return handle_price_inquiry(message)
+    
+    # Payment information
+    if 'payment' in message or 'pay' in message or 'دفع' in message:
+        return handle_payment_info()
+    
+    # Operating hours
+    if 'hour' in message or 'time' in message or 'open' in message or 'ساعات' in message or 'مواعيد' in message:
+        return handle_operating_hours()
+    
+    # Location/delivery info
+    if 'location' in message or 'delivery' in message or 'address' in message or 'موقع' in message or 'توصيل' in message:
+        return handle_location_info()
+    
+    # Help or general greeting
+    if any(word in message for word in ['help', 'hello', 'hi', 'مرحبا', 'مساعدة', 'السلام']):
+        return handle_general_help()
+    
+    # Default response with smart suggestions
+    return handle_default_response(message)
+
+def handle_price_calculation(message):
+    """Handle price calculation requests"""
+    categories = Category.query.all()
+    total_cost = 0
+    calculation_details = []
+    
+    # Extract quantities and service types
+    for category in categories:
+        if not category.items:
+            continue
+            
+        for item in category.items:
+            # Check for item mentions with quantities
+            item_patterns = [
+                item['name']['en'].lower(),
+                item['name'].get('ar', '').lower()
+            ]
+            
+            for pattern in item_patterns:
+                if pattern and pattern in message:
+                    # Look for quantity numbers near the item name
+                    qty_match = re.search(rf'(\d+)\s*{re.escape(pattern)}|{re.escape(pattern)}\s*(\d+)', message)
+                    if qty_match:
+                        qty = int(qty_match.group(1) or qty_match.group(2))
+                        item_total = qty * item['price']
+                        total_cost += item_total
+                        calculation_details.append({
+                            'item': item['name']['en'],
+                            'quantity': qty,
+                            'unit_price': item['price'],
+                            'total': item_total
+                        })
+    
+    if calculation_details:
+        response = "📊 **Cost Calculation:**\n\n"
+        for detail in calculation_details:
+            response += f"• {detail['item']}: {detail['quantity']} × {detail['unit_price']} = {detail['total']} {config.CURRENCY_SYMBOL}\n"
+        
+        # Add commission calculation
+        app_commission = total_cost * config.COMMISSION_RATE
+        shop_revenue = total_cost * config.SHOP_RATE
+        
+        response += f"\n**Total Cost:** {total_cost} {config.CURRENCY_SYMBOL}\n"
+        response += f"**Commission ({int(config.COMMISSION_RATE * 100)}%):** {app_commission:.2f} {config.CURRENCY_SYMBOL}\n"
+        response += f"**Shop Revenue ({int(config.SHOP_RATE * 100)}%):** {shop_revenue:.2f} {config.CURRENCY_SYMBOL}\n"
+        
+        return {
+            "response": response,
+            "type": "calculation",
+            "calculation": {
+                "items": calculation_details,
+                "total": total_cost,
+                "commission": app_commission,
+                "shop_revenue": shop_revenue
+            }
+        }
+    else:
+        return {
+            "response": "I can help you calculate costs! Please specify items and quantities like:\n• '3 carpets'\n• '2 shirts and 1 dress'\n• 'Calculate 5 small rugs'",
+            "type": "calculation_help"
+        }
+
+def handle_order_tracking(order_id, user_id):
+    """Handle order tracking by ID"""
+    order = Order.query.get(order_id)
+    
+    if not order:
+        return {
+            "response": "Order not found. Please check your order ID and try again.",
+            "type": "order_not_found"
+        }
+    
+    # Calculate time since order
+    time_diff = datetime.now() - order.created_at
+    time_ago = f"{time_diff.days} days" if time_diff.days > 0 else f"{time_diff.seconds // 3600} hours"
+    
+    response = f"📋 **Order Status Update**\n\n"
+    response += f"**Order ID:** {order.id}\n"
+    response += f"**Status:** {order.status.title()}\n"
+    response += f"**Total Amount:** {order.total_amount} {config.CURRENCY_SYMBOL}\n"
+    response += f"**Placed:** {time_ago} ago\n"
+    response += f"**Payment:** {order.payment_method.title()}\n\n"
+    
+    # Status-specific messages
+    status_messages = {
+        'pending': 'Your order is being processed and will be picked up soon.',
+        'washing': 'Your items are currently being cleaned with care.',
+        'ready': 'Great news! Your order is ready for pickup or delivery.',
+        'delivered': 'Your order has been completed. Thank you for choosing our service!'
+    }
+    
+    response += status_messages.get(order.status, 'Order is being processed.')
+    
+    return {
+        "response": response,
+        "type": "order_status",
+        "order": order.to_dict()
+    }
+
+def handle_phone_order_lookup(phone):
+    """Handle order lookup by phone number"""
+    user = User.query.filter_by(phone=phone).first()
+    
+    if not user:
+        return {
+            "response": f"No orders found for phone number {phone}. Please check the number or create a new order.",
+            "type": "no_orders"
+        }
+    
+    orders = Order.query.filter_by(user_id=user.id).order_by(Order.created_at.desc()).limit(5).all()
+    
+    if not orders:
+        return {
+            "response": f"No orders found for {user.name}. Ready to place your first order?",
+            "type": "no_orders"
+        }
+    
+    response = f"📱 **Orders for {user.name}:**\n\n"
+    for order in orders:
+        response += f"• **{order.id}** - {order.status.title()} - {order.total_amount} {config.CURRENCY_SYMBOL}\n"
+    
+    response += f"\nTo track a specific order, send me the order ID."
+    
+    return {
+        "response": response,
+        "type": "phone_orders",
+        "orders": [order.to_dict() for order in orders]
+    }
+
+def handle_service_recommendations(message):
+    """Provide service recommendations based on user needs"""
+    categories = Category.query.all()
+    
+    # Recommendation logic based on keywords
+    recommendations = []
+    
+    if any(word in message for word in ['carpet', 'rug', 'floor', 'سجاد', 'أرضية']):
+        carpet_cat = next((cat for cat in categories if 'carpet' in cat.name_en.lower()), None)
+        if carpet_cat:
+            recommendations.append(carpet_cat)
+    
+    if any(word in message for word in ['clothes', 'shirt', 'dress', 'ملابس', 'قميص', 'فستان']):
+        clothing_cat = next((cat for cat in categories if 'women' in cat.name_en.lower() or 'cloth' in cat.name_en.lower()), None)
+        if clothing_cat:
+            recommendations.append(clothing_cat)
+    
+    if any(word in message for word in ['furniture', 'sofa', 'chair', 'أثاث', 'كنب', 'كرسي']):
+        furniture_cat = next((cat for cat in categories if 'upholstery' in cat.name_en.lower()), None)
+        if furniture_cat:
+            recommendations.append(furniture_cat)
+    
+    if recommendations:
+        response = "🎯 **Recommended Services:**\n\n"
+        for cat in recommendations:
+            response += f"**{cat.name_en}** ({cat.name_ar})\n"
+            response += f"{cat.description_en}\n\n"
+            if cat.items:
+                response += "Services include:\n"
+                for item in cat.items[:3]:  # Show top 3 items
+                    response += f"• {item['name']['en']}: {item['price']} {config.CURRENCY_SYMBOL}\n"
+                response += "\n"
+    else:
+        response = "I'd be happy to recommend services! Could you tell me what type of cleaning you need?\n\n"
+        response += "We offer:\n• Carpet & Rug Cleaning\n• Women's Clothing Care\n• Upholstery Cleaning"
+    
+    return {
+        "response": response,
+        "type": "recommendations"
+    }
+
+def handle_price_inquiry(message):
+    """Handle general price inquiries"""
+    categories = Category.query.all()
+    response = "💰 **Our Service Prices:**\n\n"
+    
+    for category in categories:
+        response += f"**{category.name_en}** ({category.name_ar})\n"
+        if category.items:
+            for item in category.items:
+                response += f"• {item['name']['en']}: {item['price']} {config.CURRENCY_SYMBOL}\n"
+        response += "\n"
+    
+    response += f"💡 **Tip:** Send me quantities like '3 carpets + 2 shirts' and I'll calculate the total cost!"
+    
+    return {
+        "response": response,
+        "type": "price_list"
+    }
+
+def handle_payment_info():
+    """Handle payment method inquiries"""
+    response = f"💳 **Payment Methods:**\n\n"
+    response += f"We accept: {', '.join(config.SUPPORTED_PAYMENT_METHODS)}\n\n"
+    response += f"💰 **Commission Structure:**\n"
+    response += f"• App Commission: {int(config.COMMISSION_RATE * 100)}%\n"
+    response += f"• Shop Revenue: {int(config.SHOP_RATE * 100)}%\n\n"
+    response += f"All prices are in {config.CURRENCY_SYMBOL}."
+    
+    return {
+        "response": response,
+        "type": "payment_info"
+    }
+
+def handle_operating_hours():
+    """Handle operating hours inquiries"""
+    response = "🕒 **Operating Hours:**\n\n"
+    response += "• Monday - Saturday: 8:00 AM - 8:00 PM\n"
+    response += "• Sunday: 10:00 AM - 6:00 PM\n\n"
+    response += "📞 **Contact:** Available during business hours\n"
+    response += "💬 **Chat Support:** 24/7 (like now!)"
+    
+    return {
+        "response": response,
+        "type": "hours"
+    }
+
+def handle_location_info():
+    """Handle location and delivery inquiries"""
+    response = "📍 **Service Area & Delivery:**\n\n"
+    response += "• **Pickup Service:** Free within city limits\n"
+    response += "• **Delivery:** Same-day or next-day delivery\n"
+    response += "• **Coverage Area:** All major neighborhoods\n\n"
+    response += "📱 **GPS Tracking:** We'll locate you when you place an order\n"
+    response += "🚚 **Delivery Fee:** Calculated based on distance"
+    
+    return {
+        "response": response,
+        "type": "location"
+    }
+
+def handle_general_help():
+    """Handle general help and greetings"""
+    response = "👋 **Welcome! I'm your laundry assistant.**\n\n"
+    response += "I can help you with:\n"
+    response += "💰 **Price Calculations** - 'Calculate 3 carpets + 2 shirts'\n"
+    response += "📋 **Order Tracking** - Send your order ID or phone number\n"
+    response += "🎯 **Service Recommendations** - Tell me what you need cleaned\n"
+    response += "💳 **Payment Info** - Payment methods and pricing\n"
+    response += "📍 **Location & Hours** - Service area and operating times\n\n"
+    response += "Just type your question naturally - I'll understand! 😊"
+    
+    return {
+        "response": response,
+        "type": "help"
+    }
+
+def handle_default_response(message):
+    """Handle unrecognized messages with smart suggestions"""
+    # Try to extract intent from unknown messages
+    suggestions = []
+    
+    if any(char in message for char in '0123456789'):
+        suggestions.append("💡 Try: 'Calculate 3 carpets' for price estimation")
+    
+    if len(message) > 10:
+        suggestions.append("💡 Try: 'Track my order' or send your order ID")
+    
+    response = "🤔 I'm not sure I understood that completely.\n\n"
+    
+    if suggestions:
+        response += "Here are some suggestions:\n"
+        for suggestion in suggestions:
+            response += f"{suggestion}\n"
+    else:
+        response += "You can ask me about:\n"
+        response += "• Service prices and calculations\n"
+        response += "• Order tracking and status\n"
+        response += "• Recommendations and help\n"
+    
+    response += "\n💬 **Tip:** Type 'help' for all available commands!"
+    
+    return {
+        "response": response,
+        "type": "unclear"
+    }
 
 @app.route('/api/analytics/summary')
 def analytics_summary():
