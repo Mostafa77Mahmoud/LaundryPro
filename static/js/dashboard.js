@@ -272,7 +272,7 @@ class Dashboard {
                 }
                 
                 element.textContent = isCurrency ? 
-                    `${currentValue.toFixed(2)} SAR` : 
+                    `${currentValue.toFixed(2)} LE` : 
                     Math.round(currentValue).toString();
             }, 50);
         });
@@ -359,10 +359,7 @@ class Dashboard {
 
     // Format currency for display
     formatCurrency(amount) {
-        return new Intl.NumberFormat('ar-SA', {
-            style: 'currency',
-            currency: 'SAR'
-        }).format(amount);
+        return `${amount.toFixed(2)} LE`;
     }
 
     // Format date for display

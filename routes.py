@@ -623,9 +623,9 @@ def export_detailed_report():
                 order.user.phone if order.user else 'N/A',
                 order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 order.payment_method,
-                order.total_amount,
-                order.app_commission,
-                order.shop_revenue,
+                f"{order.total_amount:.2f} LE",
+                f"{order.app_commission:.2f} LE",
+                f"{order.shop_revenue:.2f} LE",
                 order.status
             ])
         

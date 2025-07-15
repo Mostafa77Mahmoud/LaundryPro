@@ -137,7 +137,7 @@
                             <span class="lang-en">Total Revenue</span>
                             <span class="lang-ar">إجمالي الإيرادات</span>
                         </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalRevenue">0 SAR</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalRevenue">0 LE</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
@@ -156,7 +156,7 @@
                             <span class="lang-en">App Commission (30%)</span>
                             <span class="lang-ar">عمولة التطبيق (30%)</span>
                         </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalCommission">0 SAR</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalCommission">0 LE</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-percent fa-2x text-gray-300"></i>
@@ -175,7 +175,7 @@
                             <span class="lang-en">Shop Revenue (70%)</span>
                             <span class="lang-ar">ربح المتجر (70%)</span>
                         </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="shopRevenue">0 SAR</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="shopRevenue">0 LE</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-store fa-2x text-gray-300"></i>
@@ -307,9 +307,9 @@ function displayReports(data) {
             </td>
             <td>${new Date(order.date).toLocaleDateString()}</td>
             <td>${order.payment_method}</td>
-            <td>${order.subtotal.toFixed(2)} SAR</td>
-            <td>${order.commission_amount.toFixed(2)} SAR</td>
-            <td>${order.shop_revenue.toFixed(2)} SAR</td>
+            <td>${order.subtotal.toFixed(2)} LE</td>
+            <td>${order.commission_amount.toFixed(2)} LE</td>
+            <td>${order.shop_revenue.toFixed(2)} LE</td>
             <td>
                 <span class="badge ${getStatusBadge(order.status)}">${order.status}</span>
             </td>
@@ -326,9 +326,9 @@ function displayReports(data) {
 // Update summary cards
 function updateSummaryCards(data) {
     document.getElementById('totalOrders').textContent = data.total_orders;
-    document.getElementById('totalRevenue').textContent = data.total_revenue.toFixed(2) + ' SAR';
-    document.getElementById('totalCommission').textContent = data.total_commission.toFixed(2) + ' SAR';
-    document.getElementById('shopRevenue').textContent = data.total_shop_revenue.toFixed(2) + ' SAR';
+    document.getElementById('totalRevenue').textContent = data.total_revenue.toFixed(2) + ' LE';
+    document.getElementById('totalCommission').textContent = data.total_commission.toFixed(2) + ' LE';
+    document.getElementById('shopRevenue').textContent = data.total_shop_revenue.toFixed(2) + ' LE';
 }
 
 // Get status badge class
@@ -432,8 +432,8 @@ function viewOrderDetails(orderId) {
                             <tr>
                                 <td>${item.name_en} / ${item.name_ar || item.name_en}</td>
                                 <td>${item.quantity}</td>
-                                <td>${item.unit_price.toFixed(2)} SAR</td>
-                                <td>${item.total.toFixed(2)} SAR</td>
+                                <td>${item.unit_price.toFixed(2)} LE</td>
+                                <td>${item.total.toFixed(2)} LE</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -442,9 +442,9 @@ function viewOrderDetails(orderId) {
                 <div class="row mt-3">
                     <div class="col-md-6">
                         <h6>Financial Breakdown</h6>
-                        <p><strong>Subtotal:</strong> ${order.subtotal.toFixed(2)} SAR</p>
-                        <p><strong>Commission (30%):</strong> ${order.commission_amount.toFixed(2)} SAR</p>
-                        <p><strong>Shop Revenue (70%):</strong> ${order.shop_revenue.toFixed(2)} SAR</p>
+                        <p><strong>Subtotal:</strong> ${order.subtotal.toFixed(2)} LE</p>
+                        <p><strong>Commission (30%):</strong> ${order.commission_amount.toFixed(2)} LE</p>
+                        <p><strong>Shop Revenue (70%):</strong> ${order.shop_revenue.toFixed(2)} LE</p>
                     </div>
                     <div class="col-md-6">
                         <h6>Location</h6>

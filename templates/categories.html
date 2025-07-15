@@ -7,11 +7,13 @@
     <div class="col-12 d-flex justify-content-between align-items-center">
         <h1 class="h2 mb-0">
             <i class="fas fa-tags me-2"></i>
-            Service Categories
+            <span class="lang-en">Service Categories</span>
+            <span class="lang-ar">فئات الخدمات</span>
         </h1>
         <button class="btn btn-primary" onclick="showAddCategoryModal()">
             <i class="fas fa-plus me-1"></i>
-            Add Category
+            <span class="lang-en">Add Category</span>
+            <span class="lang-ar">إضافة فئة</span>
         </button>
     </div>
 </div>
@@ -31,14 +33,20 @@
                     </button>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="#" onclick="editCategory('{{ category['id'] }}')">
-                            <i class="fas fa-edit me-1"></i>Edit
+                            <i class="fas fa-edit me-1"></i>
+                            <span class="lang-en">Edit</span>
+                            <span class="lang-ar">تعديل</span>
                         </a></li>
                         <li><a class="dropdown-item" href="#" onclick="changeImage('{{ category['id'] }}')">
-                            <i class="fas fa-image me-1"></i>Change Image
+                            <i class="fas fa-image me-1"></i>
+                            <span class="lang-en">Change Image</span>
+                            <span class="lang-ar">تغيير الصورة</span>
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="#" onclick="deleteCategory('{{ category['id'] }}')">
-                            <i class="fas fa-trash me-1"></i>Delete
+                            <i class="fas fa-trash me-1"></i>
+                            <span class="lang-en">Delete</span>
+                            <span class="lang-ar">حذف</span>
                         </a></li>
                     </ul>
                 </div>
@@ -53,7 +61,10 @@
                     <span class="category-desc-ar d-none">{{ category['description']['ar'] }}</span>
                 </p>
                 
-                <h6 class="mb-2" data-translate="services-prices">Services & Prices:</h6>
+                <h6 class="mb-2">
+                    <span class="lang-en">Services & Prices:</span>
+                    <span class="lang-ar">الخدمات والأسعار:</span>
+                </h6>
                 <div class="table-responsive">
                     <table class="table table-sm">
                         <tbody>
@@ -61,7 +72,7 @@
                             <tr>
                                 <td class="item-name-en">{{ item['name']['en'] }}</td>
                                 <td class="item-name-ar d-none">{{ item['name']['ar'] }}</td>
-                                <td class="text-end">{{ item['price'] }} SAR</td>
+                                <td class="text-end">{{ item['price'] }} LE</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -75,11 +86,18 @@
         <div class="card">
             <div class="card-body text-center">
                 <i class="fas fa-tags fa-3x text-muted mb-3"></i>
-                <h5 data-translate="no-categories">No Categories Found</h5>
-                <p class="text-muted" data-translate="start-adding">Start by adding your first service category.</p>
+                <h5>
+                    <span class="lang-en">No Categories Found</span>
+                    <span class="lang-ar">لم يتم العثور على فئات</span>
+                </h5>
+                <p class="text-muted">
+                    <span class="lang-en">Start by adding your first service category.</span>
+                    <span class="lang-ar">ابدأ بإضافة فئة الخدمة الأولى.</span>
+                </p>
                 <button class="btn btn-primary btn-add-category" onclick="showAddCategoryModal()">
                     <i class="fas fa-plus me-1"></i>
-                    <span data-translate="add-category">Add Category</span>
+                    <span class="lang-en">Add Category</span>
+                    <span class="lang-ar">إضافة فئة</span>
                 </button>
             </div>
         </div>
@@ -92,7 +110,10 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="categoryModalTitle">Add Category</h5>
+                <h5 class="modal-title" id="categoryModalTitle">
+                    <span class="lang-en">Add Category</span>
+                    <span class="lang-ar">إضافة فئة</span>
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="categoryForm">
@@ -102,7 +123,10 @@
                     <!-- Category Names -->
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label for="nameEn" class="form-label">Name (English)</label>
+                            <label for="nameEn" class="form-label">
+                                <span class="lang-en">Name (English)</span>
+                                <span class="lang-ar">الاسم (بالإنجليزية)</span>
+                            </label>
                             <input type="text" class="form-control" id="nameEn" name="name_en" required>
                         </div>
                         <div class="col-md-6">

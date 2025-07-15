@@ -43,8 +43,8 @@
         <div class="container-fluid">
             <a class="navbar-brand" href="{{ url_for('dashboard') }}">
                 <i class="fas fa-tshirt me-2"></i>
-                <span class="lang-en">Laundry Service</span>
-                <span class="lang-ar">خدمة الغسيل</span>
+                <span class="lang-en">El-Husseiny Clean</span>
+                <span class="lang-ar">الحسيني كلين</span>
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -100,9 +100,14 @@
                     <button class="btn btn-outline-light btn-sm me-2" id="themeToggle">
                         <i class="fas fa-sun" id="themeIcon"></i>
                     </button>
-                    <button class="btn btn-outline-light btn-sm" id="langToggle">
+                    <button class="btn btn-outline-light btn-sm me-2" id="langToggle">
                         <span id="langText">عربي</span>
                     </button>
+                    <a class="btn btn-outline-light btn-sm" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt me-1"></i>
+                        <span class="lang-en">Logout</span>
+                        <span class="lang-ar">تسجيل الخروج</span>
+                    </a>
                 </div>
             </div>
         </div>

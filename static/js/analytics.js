@@ -116,7 +116,7 @@ class AnalyticsDashboard {
                         intersect: false,
                         callbacks: {
                             label: function(context) {
-                                return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' SAR';
+                                return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' LE';
                             }
                         }
                     }
@@ -133,12 +133,12 @@ class AnalyticsDashboard {
                         display: true,
                         title: {
                             display: true,
-                            text: 'Amount (SAR)'
+                            text: 'Amount (LE)'
                         },
                         beginAtZero: true,
                         ticks: {
                             callback: function(value) {
-                                return value.toFixed(2) + ' SAR';
+                                return value.toFixed(2) + ' LE';
                             }
                         }
                     }
@@ -234,7 +234,7 @@ class AnalyticsDashboard {
                 <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
                     <div>
                         <strong>${service}</strong>
-                        <small class="text-muted d-block">${revenue.toFixed(2)} SAR revenue</small>
+                        <small class="text-muted d-block">${revenue.toFixed(2)} LE revenue</small>
                     </div>
                     <span class="badge bg-primary">${quantity}</span>
                 </div>
@@ -299,7 +299,7 @@ class AnalyticsDashboard {
                             label: function(context) {
                                 const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                 const percentage = ((context.parsed / total) * 100).toFixed(1);
-                                return context.label + ': ' + context.parsed.toFixed(2) + ' SAR (' + percentage + '%)';
+                                return context.label + ': ' + context.parsed.toFixed(2) + ' LE (' + percentage + '%)';
                             }
                         }
                     }
@@ -362,7 +362,7 @@ class AnalyticsDashboard {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return 'Revenue: ' + context.parsed.y.toFixed(2) + ' SAR';
+                                return 'Revenue: ' + context.parsed.y.toFixed(2) + ' LE';
                             }
                         }
                     }
@@ -379,12 +379,12 @@ class AnalyticsDashboard {
                         display: true,
                         title: {
                             display: true,
-                            text: 'Revenue (SAR)'
+                            text: 'Revenue (LE)'
                         },
                         beginAtZero: true,
                         ticks: {
                             callback: function(value) {
-                                return value.toFixed(2) + ' SAR';
+                                return value.toFixed(2) + ' LE';
                             }
                         }
                     }
@@ -419,7 +419,7 @@ class AnalyticsDashboard {
         const kpis = [
             {
                 title: 'Average Order Value',
-                value: avgOrderValue.toFixed(2) + ' SAR',
+                value: avgOrderValue.toFixed(2) + ' LE',
                 icon: 'fas fa-calculator',
                 color: 'primary'
             },
